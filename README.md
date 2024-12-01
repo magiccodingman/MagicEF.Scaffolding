@@ -192,3 +192,8 @@ var result = repository.GetAll().FirstOrDefault(x => x.Name == "Sample");
 ## Conclusion
 
 Magic EF Scaffolding revolutionizes database-first workflows by automating tedious tasks, enabling effortless integration of database changes into your C# code. Whether you’re running locally or in a pipeline, this tool makes database-first EF development simple, efficient, and scalable. Say goodbye to manual adjustments and embrace the future of database-first workflows!
+
+### Extra Notes
+I made this project quite some time ago, but wanted to rebuild it into a significantly more production worthy state. And this need was extreme for me when I needed proper environmental pipeline scaffolding. The OnModelCreating that's generated when scaffolding isn't technically required, but it is so helpful for performance! The ability to generate it in a pipeline process so that it meets any environment was critical for me. And I hope you see how crticial it can become for you. I cannot code without this setup anymore. This has become my new standard, protocal, and my desire for working with literally any database.
+
+I will never use code first again personally. Who knows though, did I convince you too?!
