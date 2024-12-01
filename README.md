@@ -1,1 +1,194 @@
-# MagicEf
+# Magic EF Scaffolding
+
+Magic EF Scaffolding is a revolutionary project designed to make database-first Entity Framework (EF) the powerhouse it was always meant to be. Say goodbye to the perceived downsides of database-first and embrace automation and ease that will make you wonder why anyone would ever choose code-first! If you've been longing for a truly optimized workflow for database-first development, you're in for a treat.
+
+## Prerequisites
+
+### Required Tools
+This project works alongside `dotnet ef dbcontext`. You’ll need to install the following tools:
+
+#### Install `dotnet ef`
+In your terminal or command prompt:
+```bash
+dotnet tool install --global dotnet-ef
+```
+
+#### Recommended Setup
+It’s highly recommended to use a separate C# class library for your database models and scaffolding. Combining this with your primary project is not advised. Create a new C# Class Library project if you haven’t already.
+
+#### Install Required NuGet Packages
+Navigate to the directory of your class library and run the following commands:
+```bash
+dotnet add package Microsoft.EntityFrameworkCore.SqlServer
+dotnet add package Microsoft.EntityFrameworkCore.Tools
+```
+
+## Project Setup
+
+### Directory Structure
+Create the following folder structure in your project:
+- `Concrete`
+- `DbHelpers`
+- `DbModels`
+- `Extensions`
+- `Interfaces`
+- `MetaDataClasses`
+
+### Initial DbContext Setup
+At the base directory of your project, create a new C# file for your custom `DbContext`. The filename is up to you. Use the following template for the class:
+
+```csharp
+public partial class MyDbContext : ReadOnlyDbContext
+{
+    public MyDbContext()
+    {
+    }
+
+    public MyDbContext(DbContextOptions<ReadOnlyDbContext> options)
+        : base(options) // Pass the correct type to the base class constructor
+    {
+    }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        => optionsBuilder.UseSqlServer(GetConnectionString());
+
+    internal string GetConnectionString()
+    {
+        // Write your logic to return the connection string
+    }
+}
+```
+
+**Important**: Copy this template exactly, including the inheritance from `ReadOnlyDbContext`, which will be generated in later steps.
+
+## Scaffolding with `dotnet ef`
+
+To scaffold your database models, use the following PowerShell command:
+
+```powershell
+cd "<path-to-your-project>"
+
+# Read the connection string from a file
+$connectionString = Get-Content -Path "ExampleConnectionString.txt"
+
+# Define paths
+$modelsDirectory = "DbModels"   # Scaffolded models directory
+$contextDirectory = "."         # DbContext remains in the base directory
+
+# Execute scaffolding
+```
+```powershell
+dotnet ef dbcontext scaffold $connectionString Microsoft.EntityFrameworkCore.SqlServer `
+    --context ReadOnlyDbContext `
+    --output-dir $modelsDirectory `
+    --context-dir $contextDirectory `
+    --namespace DataAccess `
+    --force `
+    --data-annotations
+```
+
+### Notes:
+- Adjust paths as necessary for your setup.
+- The `DbModels` directory will contain your scaffolded models.
+- Do not edit scaffolded models or the `ReadOnlyDbContext` class, as they will be overwritten when re-scaffolded in the future.
+
+## Magic EF Scaffolding
+
+This is where the magic happens! Once `dotnet ef` has scaffolded your models and context, Magic EF Scaffolding automates further enhancements and organization for an efficient database-first workflow.
+
+### Installation and Setup
+- Clone the Magic EF Scaffolding repository.
+- Build the project to generate the executable file (`MagicEf.exe`).
+- Optionally, add the executable to your system path for easy access, or call it directly using its full path.
+
+### Command Examples
+
+Here are example commands and their purposes. Replace the paths with your project-specific paths.
+
+#### Fix Ambiguous Index
+```bash
+"<path-to-MagicEf.exe>" --ambiguousIndex --directoryPath "<path-to-DbModels-folder>"
+```
+This command resolves common issues with ambiguous context in scaffolded models.
+
+#### Remove `OnConfiguring`
+```bash
+"<path-to-MagicEf.exe>" --removeOnConfiguring --filePath "<path-to-ReadOnlyDbContext.cs>"
+```
+Removes the `OnConfiguring` method from the scaffolded `ReadOnlyDbContext`, ensuring it exists only in your custom `DbContext` class for better control.
+
+#### Generate Helper Files
+```bash
+"<path-to-MagicEf.exe>" --dbHelpers "<path-to-DbHelpers-folder>" --customContextFilePath "<path-to-custom-DbContext.cs>"
+```
+Generates essential helper files in the `DbHelpers` folder to simplify database interactions.
+
+#### Scaffold Protocol
+```bash
+"<path-to-MagicEf.exe>" --scaffoldProtocol \
+    --concretePath "<path-to-Concrete-folder>" \
+    --modelPath "<path-to-DbModels-folder>" \
+    --extensionPath "<path-to-Extensions-folder>" \
+    --metaDataPath "<path-to-MetaDataClasses-folder>" \
+    --interfacesPath "<path-to-Interfaces-folder>" \
+    --projectFilePath "<path-to-project.csproj>"
+```
+Generates metadata, extensions, interfaces, and concrete files for scaffolded models, enhancing your workflow without overwriting existing files.
+
+### Workflow Automation
+For efficiency, create a script combining EF scaffolding and Magic EF Scaffolding. Automate this process in local development or CI/CD pipelines to ensure your scaffolding aligns with database changes.
+
+### Generated File Types
+1. **Concrete Files**: Contains methods like `GetById` with automatically generated parameters.
+2. **Extension Files**: Add custom properties or methods to models using the `NotMapped` attribute.
+3. **Interface Files**: Define model contracts.
+4. **Metadata Files**: Store auxiliary data about models.
+5. **Helper Files**: Simplify database access and operations.
+
+## Example Usage
+
+Here’s how easy it becomes to use your database-first models:
+
+### Retrieve a Context
+```csharp
+using (var _dbContext = new DbHelper().GetMyDbContext())
+{
+    // Your database logic here
+}
+```
+
+### Repository Pattern
+Automatically generated repository classes make CRUD operations straightforward:
+
+#### Add Entities
+```csharp
+repository.Add(entity);
+repository.AddRange(entities);
+```
+
+#### Update Entities
+```csharp
+repository.Update(entity);
+repository.UpdateRange(entities);
+```
+
+#### Delete Entities
+```csharp
+repository.Delete(entity);
+repository.DeleteRange(entities);
+```
+
+#### Query Entities
+```csharp
+var results = repository.GetAllNoTracking().Where(x => x.Id == 2).ToList();
+```
+
+### LINQ Integration
+Leverage LINQ to build SQL queries seamlessly:
+```csharp
+var result = repository.GetAll().FirstOrDefault(x => x.Name == "Sample");
+```
+
+## Conclusion
+
+Magic EF Scaffolding revolutionizes database-first workflows by automating tedious tasks, enabling effortless integration of database changes into your C# code. Whether you’re running locally or in a pipeline, this tool makes database-first EF development simple, efficient, and scalable. Say goodbye to manual adjustments and embrace the future of database-first workflows!
