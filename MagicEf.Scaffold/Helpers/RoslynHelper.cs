@@ -17,6 +17,25 @@ namespace MagicEf.Scaffold.Helpers
             return syntaxTree.GetRoot();
         }
 
+        public static string GetNamespace(SyntaxNode root)
+        {
+            // Handle file-scoped namespaces (e.g., "namespace DataAccess.Reporting;")
+            var fileScopedNamespace = root.DescendantNodes()
+                .OfType<FileScopedNamespaceDeclarationSyntax>()
+                .FirstOrDefault();
+            if (fileScopedNamespace != null)
+            {
+                return fileScopedNamespace.Name.ToString();
+            }
+
+            // Handle block-scoped namespaces (e.g., "namespace DataAccess.Reporting { ... }")
+            var namespaceDeclaration = root.DescendantNodes()
+                .OfType<NamespaceDeclarationSyntax>()
+                .FirstOrDefault();
+            return namespaceDeclaration?.Name.ToString();
+        }
+
+
         public static List<(string Name, string Type)> GetKeyProperties(ClassDeclarationSyntax classDeclaration)
         {
             var keyProperties = new List<(string Name, string Type)>();

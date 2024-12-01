@@ -19,7 +19,7 @@ namespace MagicEf.Scaffold.CommandActions
             string extensionPath = ArgumentHelper.GetArgumentValue(args, "--extensionPath");
             string metaDataPath = ArgumentHelper.GetArgumentValue(args, "--metaDataPath");
             string interfacesPath = ArgumentHelper.GetArgumentValue(args, "--interfacesPath");
-            string dbHelpersPath = ArgumentHelper.GetArgumentValue(args, "--dbHelpersPath");
+           // string dbHelpersPath = ArgumentHelper.GetArgumentValue(args, "--dbHelpersPath");
             string projectFilePath = ArgumentHelper.GetArgumentValue(args, "--projectFilePath");
 
             // Check that all required arguments are present
@@ -29,7 +29,7 @@ namespace MagicEf.Scaffold.CommandActions
                 string.IsNullOrEmpty(extensionPath) ||
                 string.IsNullOrEmpty(metaDataPath) ||
                 string.IsNullOrEmpty(interfacesPath) ||
-                string.IsNullOrEmpty(dbHelpersPath) ||
+               // string.IsNullOrEmpty(dbHelpersPath) ||
                 string.IsNullOrEmpty(projectFilePath))
             {
                 Console.WriteLine("Error: All arguments are required.");
@@ -42,7 +42,7 @@ namespace MagicEf.Scaffold.CommandActions
             EnsureDirectoryExists(extensionPath);
             EnsureDirectoryExists(metaDataPath);
             EnsureDirectoryExists(interfacesPath);
-            EnsureDirectoryExists(dbHelpersPath);
+          //  EnsureDirectoryExists(dbHelpersPath);
 
             // Get project namespace name from csproj file
             string projectNamespaceName = ProjectHelper.GetProjectNamespace(projectFilePath);
@@ -53,7 +53,7 @@ namespace MagicEf.Scaffold.CommandActions
             }
 
             // Call CreateHelpers (empty method for now)
-            CreateHelpers(dbHelpersPath);
+           // CreateHelpers(dbHelpersPath);
 
             // Process each .cs file in the model path
             var modelFiles = Directory.GetFiles(modelPath, "*.cs");

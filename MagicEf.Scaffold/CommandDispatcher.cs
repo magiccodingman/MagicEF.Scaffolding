@@ -36,9 +36,14 @@ namespace MagicEf.Scaffold
                     removeOnConfiguringHandler.Handle(args);
                     break;
 
-                case "--ScaffoldProtocol":
+                case "--scaffoldProtocol":
                     var scaffoldProtocolHandler = new ScaffoldProtocolHandler();
                     scaffoldProtocolHandler.Handle(args);
+                    break;
+
+                case "--dbHelpers":
+                    var dbHelpersHandler = new DbHelpersHandler();
+                    dbHelpersHandler.Handle(args);
                     break;
 
                 default:
