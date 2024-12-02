@@ -46,6 +46,11 @@ namespace MagicEf.Scaffold
                     dbHelpersHandler.Handle(args);
                     break;
 
+                case "--separateVirtualProperties":
+                    var separateVirtualPropertiesHandler = new SeparateVirtualPropertiesHandler();
+                    separateVirtualPropertiesHandler.Handle(args);
+                    break;
+
                 default:
                     Console.WriteLine("Unknown command. Use --help for usage information.");
                     break;
