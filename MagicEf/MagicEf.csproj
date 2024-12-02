@@ -5,8 +5,6 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<PackAsTool>true</PackAsTool>
-		<ToolCommandName>MagicEf</ToolCommandName>
 
 
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -39,5 +37,4 @@
 	<ItemGroup>
 		<ProjectReference Include="..\MagicEf.Scaffold\MagicEf.Scaffold.csproj" />
 	</ItemGroup>
-	d
 </Project>
