@@ -17,7 +17,7 @@ namespace MagicEf.Scaffold.Helpers
             return syntaxTree.GetRoot();
         }
 
-        public static string GetNamespace(SyntaxNode root)
+        public static string? GetNamespace(SyntaxNode root)
         {
             // Handle file-scoped namespaces (e.g., "namespace DataAccess.Reporting;")
             var fileScopedNamespace = root.DescendantNodes()

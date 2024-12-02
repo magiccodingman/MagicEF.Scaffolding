@@ -8,7 +8,7 @@ namespace MagicEf.Scaffold
 {
     public static class ArgumentHelper
     {
-        public static string GetArgumentValue(string[] args, string argumentName)
+        public static string? GetArgumentValue(string[] args, string argumentName)
         {
             for (int i = 0; i < args.Length; i++)
             {

@@ -9,12 +9,15 @@ namespace MagicEf.Scaffold.Helpers
 {
     public static class ProjectHelper
     {
-        public static string GetProjectNamespace(string projectFilePath)
+        public static string? GetProjectNamespace(string projectFilePath)
         {
             try
             {
                 XDocument csproj = XDocument.Load(projectFilePath);
-                XNamespace ns = csproj.Root.Name.Namespace;
+                XNamespace? ns = csproj.Root?.Name.Namespace;
+
+                if (ns == null)
+                    throw new Exception("could not find namespace");
 
                 var assemblyNameElement = csproj.Descendants(ns + "AssemblyName").FirstOrDefault();
                 if (assemblyNameElement != null && !string.IsNullOrEmpty(assemblyNameElement.Value))

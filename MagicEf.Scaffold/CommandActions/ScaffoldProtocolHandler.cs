@@ -14,13 +14,13 @@ namespace MagicEf.Scaffold.CommandActions
         {
             // Parse required arguments
             
-            string concretePath = ArgumentHelper.GetArgumentValue(args, "--concretePath");
-            string modelPath = ArgumentHelper.GetArgumentValue(args, "--modelPath");
-            string extensionPath = ArgumentHelper.GetArgumentValue(args, "--extensionPath");
-            string metaDataPath = ArgumentHelper.GetArgumentValue(args, "--metaDataPath");
-            string interfacesPath = ArgumentHelper.GetArgumentValue(args, "--interfacesPath");
-           // string dbHelpersPath = ArgumentHelper.GetArgumentValue(args, "--dbHelpersPath");
-            string projectFilePath = ArgumentHelper.GetArgumentValue(args, "--projectFilePath");
+            string? concretePath = ArgumentHelper.GetArgumentValue(args, "--concretePath");
+            string? modelPath = ArgumentHelper.GetArgumentValue(args, "--modelPath");
+            string? extensionPath = ArgumentHelper.GetArgumentValue(args, "--extensionPath");
+            string? metaDataPath = ArgumentHelper.GetArgumentValue(args, "--metaDataPath");
+            string? interfacesPath = ArgumentHelper.GetArgumentValue(args, "--interfacesPath");
+            // string dbHelpersPath = ArgumentHelper.GetArgumentValue(args, "--dbHelpersPath");
+            string? projectFilePath = ArgumentHelper.GetArgumentValue(args, "--projectFilePath");
 
             // Check that all required arguments are present
             if (
@@ -42,10 +42,10 @@ namespace MagicEf.Scaffold.CommandActions
             EnsureDirectoryExists(extensionPath);
             EnsureDirectoryExists(metaDataPath);
             EnsureDirectoryExists(interfacesPath);
-          //  EnsureDirectoryExists(dbHelpersPath);
+            //  EnsureDirectoryExists(dbHelpersPath);
 
             // Get project namespace name from csproj file
-            string projectNamespaceName = ProjectHelper.GetProjectNamespace(projectFilePath);
+            string? projectNamespaceName = ProjectHelper.GetProjectNamespace(projectFilePath);
             if (string.IsNullOrEmpty(projectNamespaceName))
             {
                 Console.WriteLine("Error: Could not determine project namespace from project file.");

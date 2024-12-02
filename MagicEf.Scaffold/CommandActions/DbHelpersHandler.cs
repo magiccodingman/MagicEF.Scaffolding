@@ -14,8 +14,8 @@ namespace MagicEf.Scaffold.CommandActions
         public override void Handle(string[] args)
         {
             // Parse required arguments
-            string dbHelpersPath = ArgumentHelper.GetArgumentValue(args, "--dbHelpers");
-            string customContextFilePath = ArgumentHelper.GetArgumentValue(args, "--customContextFilePath");
+            string? dbHelpersPath = ArgumentHelper.GetArgumentValue(args, "--dbHelpers");
+            string? customContextFilePath = ArgumentHelper.GetArgumentValue(args, "--customContextFilePath");
 
             if (string.IsNullOrEmpty(dbHelpersPath) || string.IsNullOrEmpty(customContextFilePath))
             {

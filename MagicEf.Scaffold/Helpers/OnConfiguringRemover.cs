@@ -13,12 +13,12 @@ namespace MagicEf.Scaffold.Helpers
     {
         public bool ChangesMade { get; private set; }
 
-        public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
+        public override SyntaxNode? VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
             if (node.Identifier.Text == "OnConfiguring" &&
                 node.Modifiers.Any(SyntaxKind.OverrideKeyword) &&
                 node.ParameterList.Parameters.Count == 1 &&
-                node.ParameterList.Parameters[0].Type.ToString() == "DbContextOptionsBuilder")
+                node.ParameterList.Parameters[0].Type?.ToString() == "DbContextOptionsBuilder")
             {
                 ChangesMade = true;
                 Console.WriteLine($"Removed method: {node.Identifier.Text}");

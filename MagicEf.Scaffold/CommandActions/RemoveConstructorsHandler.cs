@@ -12,7 +12,7 @@ namespace MagicEf.Scaffold.CommandActions
     {
         public override void Handle(string[] args)
         {
-            string filePath = ArgumentHelper.GetArgumentValue(args, "--filePath");
+            string? filePath = ArgumentHelper.GetArgumentValue(args, "--filePath");
 
             if (string.IsNullOrEmpty(filePath))
             {

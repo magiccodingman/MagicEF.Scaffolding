@@ -19,7 +19,7 @@ namespace MagicEf.Scaffold.Helpers
             this.className = className;
         }
 
-        public override SyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
+        public override SyntaxNode? VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
         {
             if (node.Identifier.Text == className)
             {

@@ -13,7 +13,7 @@ namespace MagicEf.Scaffold
     {
         public bool ChangesMade { get; private set; }
 
-        public override SyntaxNode VisitAttribute(AttributeSyntax node)
+        public override SyntaxNode? VisitAttribute(AttributeSyntax node)
         {
             if (node.Name.ToString() == "Index" && !node.Name.ToString().StartsWith("Microsoft.EntityFrameworkCore."))
             {
