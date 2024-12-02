@@ -117,6 +117,12 @@ This command resolves common issues with ambiguous context in scaffolded models.
 ```
 Removes the `OnConfiguring` method from the scaffolded `ReadOnlyDbContext`, ensuring it exists only in your custom `DbContext` class for better control.
 
+#### Remove `separateVirtualProperties`
+```bash
+"<path-to-MagicEf.exe>" --separateVirtualProperties --directoryPath "<path-to-DbModels-folder>"
+```
+Separates the virtual properties from the scaffold models into a separate file appended with, "SeparateVirtual" to the file name. The virtual properties are then added to a partial class. Thus functioning identically but making GIT control better when changes occur. Separating actual table/model changes from reference changes.
+
 #### Generate Helper Files
 ```bash
 "<path-to-MagicEf.exe>" --dbHelpers "<path-to-DbHelpers-folder>" --customContextFilePath "<path-to-custom-DbContext.cs>"
