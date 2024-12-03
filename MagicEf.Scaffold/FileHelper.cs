@@ -8,8 +8,15 @@ namespace MagicEf.Scaffold
 {
     public static class FileHelper
     {
+        public static string NormalizePath(string filePath)
+        {
+            return Path.GetFullPath(filePath);
+        }
+
         public static string ReadFile(string filePath)
         {
+            filePath = NormalizePath(filePath);
+
             if (!File.Exists(filePath))
             {
                 throw new FileNotFoundException($"File not found: {filePath}");
