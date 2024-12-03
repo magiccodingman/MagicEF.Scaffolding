@@ -13,6 +13,12 @@ In your terminal or command prompt:
 dotnet tool install --global dotnet-ef
 ```
 
+#### Note you can use the DotNET tool install from Nuget
+```bash
+dotnet tool install --global MagicEf
+```
+Then you can use this in any environment easily and not have to target the exe and so on.
+
 #### Recommended Setup
 It’s highly recommended to use a separate C# class library for your database models and scaffolding. Combining this with your primary project is not advised. Create a new C# Class Library project if you haven’t already.
 
