@@ -13,7 +13,7 @@ In your terminal or command prompt:
 dotnet tool install --global dotnet-ef
 ```
 
-#### Note you can use the DotNET tool install from Nuget
+#### You can use the DotNET tool install from Nuget
 ```bash
 dotnet tool install --global MagicEf
 ```
@@ -103,6 +103,7 @@ dotnet ef dbcontext scaffold $connectionString Microsoft.EntityFrameworkCore.Sql
 This is where the magic happens! Once `dotnet ef` has scaffolded your models and context, Magic EF Scaffolding automates further enhancements and organization for an efficient database-first workflow.
 
 ### Installation and Setup
+If you want to do this manually, you can, but I suggest just using the dotnet tool MagicEF from Nuget.
 - Clone the Magic EF Scaffolding repository.
 - Build the project to generate the executable file (`MagicEf.exe`).
 - Optionally, add the executable to your system path for easy access, or call it directly using its full path.
@@ -113,31 +114,31 @@ Here are example commands and their purposes. Replace the paths with your projec
 
 #### Fix Ambiguous Index
 ```bash
-"<path-to-MagicEf.exe>" --ambiguousIndex --directoryPath "<path-to-DbModels-folder>"
+MagicEF --ambiguousIndex --directoryPath "<path-to-DbModels-folder>"
 ```
 This command resolves common issues with ambiguous context in scaffolded models.
 
 #### Remove `OnConfiguring`
 ```bash
-"<path-to-MagicEf.exe>" --removeOnConfiguring --filePath "<path-to-ReadOnlyDbContext.cs>"
+MagicEF --removeOnConfiguring --filePath "<path-to-ReadOnlyDbContext.cs>"
 ```
 Removes the `OnConfiguring` method from the scaffolded `ReadOnlyDbContext`, ensuring it exists only in your custom `DbContext` class for better control.
 
 #### Remove `separateVirtualProperties`
 ```bash
-"<path-to-MagicEf.exe>" --separateVirtualProperties --directoryPath "<path-to-DbModels-folder>"
+MagicEF --separateVirtualProperties --directoryPath "<path-to-DbModels-folder>"
 ```
 Separates the virtual properties from the scaffold models into a separate file appended with, "SeparateVirtual" to the file name. The virtual properties are then added to a partial class. Thus functioning identically but making GIT control better when changes occur. Separating actual table/model changes from reference changes.
 
 #### Generate Helper Files
 ```bash
-"<path-to-MagicEf.exe>" --dbHelpers "<path-to-DbHelpers-folder>" --customContextFilePath "<path-to-custom-DbContext.cs>"
+MagicEF --dbHelpers "<path-to-DbHelpers-folder>" --customContextFilePath "<path-to-custom-DbContext.cs>"
 ```
 Generates essential helper files in the `DbHelpers` folder to simplify database interactions.
 
 #### Scaffold Protocol
 ```bash
-"<path-to-MagicEf.exe>" --scaffoldProtocol \
+MagicEF --scaffoldProtocol \
     --concretePath "<path-to-Concrete-folder>" \
     --modelPath "<path-to-DbModels-folder>" \
     --extensionPath "<path-to-Extensions-folder>" \
