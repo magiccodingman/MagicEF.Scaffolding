@@ -119,14 +119,14 @@ namespace {namespaceName}
 {{
     public class DbHelper
     {{
-        public {className} Get{className}()
+        public {className} GetContext(string ConnectionString)
         {{
-            return new {className}(new DbContextOptionsBuilder<{className}>().UseSqlServer(GetConnectionString()).Options, DbCache.dbEnvironment);
+            return new {className}(new DbContextOptionsBuilder<{className}>().UseSqlServer(ConnectionString).Options);
         }}
 
-        public string GetConnectionString()
+        public {className} Get{className}()
         {{
-            return DbCache.DecryptedConnectionString;
+            return new {className}(new DbContextOptionsBuilder<{className}>().UseSqlServer(new {className}().GetConnectionString()).Options);
         }}
     }}
 }}";
