@@ -112,17 +112,18 @@ namespace MagicEf.Scaffold.CommandActions
                 Console.WriteLine($"File {fileName} already exists.");
                 return;
             }
-
+            /*
+             public {className} GetContext(string ConnectionString)
+        {{
+            return new {className}(new DbContextOptionsBuilder<{className}>().UseSqlServer(ConnectionString).Options);
+        }}
+             */
             string content = $@"using Microsoft.EntityFrameworkCore;
 
 namespace {namespaceName}
 {{
     public class DbHelper
     {{
-        public {className} GetContext(string ConnectionString)
-        {{
-            return new {className}(new DbContextOptionsBuilder<{className}>().UseSqlServer(ConnectionString).Options);
-        }}
 
         public {className} Get{className}()
         {{
