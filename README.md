@@ -27,7 +27,10 @@ Navigate to the directory of your class library and run the following commands:
 ```bash
 dotnet add package Microsoft.EntityFrameworkCore.SqlServer
 dotnet add package Microsoft.EntityFrameworkCore.Tools
+dotnet add package  Microsoft.EntityFrameworkCore.Design
 ```
+
+Please note that the, "Microsoft.EntityFrameworkCore.Design" may need to be added with the version matching your framework. I personally have a NET 8.0 project and am using the 8.0.0 version and added all of these as a nuget package to my project.
 
 ## Project Setup
 
