@@ -14,13 +14,13 @@ namespace MagicEf.Scaffold.CommandActions
         {
             // Parse required arguments
             
-            string? concretePath = ArgumentHelper.GetArgumentValue(args, "--concretePath");
-            string? modelPath = ArgumentHelper.GetArgumentValue(args, "--modelPath");
-            string? extensionPath = ArgumentHelper.GetArgumentValue(args, "--extensionPath");
-            string? metaDataPath = ArgumentHelper.GetArgumentValue(args, "--metaDataPath");
-            string? interfacesPath = ArgumentHelper.GetArgumentValue(args, "--interfacesPath");
+            string? concretePath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--concretePath"));
+            string? modelPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--modelPath"));
+            string? extensionPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--extensionPath"));
+            string? metaDataPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--metaDataPath"));
+            string? interfacesPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--interfacesPath"));
             // string dbHelpersPath = ArgumentHelper.GetArgumentValue(args, "--dbHelpersPath");
-            string? projectFilePath = ArgumentHelper.GetArgumentValue(args, "--projectFilePath");
+            string? projectFilePath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--projectFilePath"));
 
             // Check that all required arguments are present
             if (

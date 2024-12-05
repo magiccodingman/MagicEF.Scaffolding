@@ -11,43 +11,51 @@ namespace MagicEf.Scaffold.Helpers
     {
         public static string? GetProjectNamespace(string projectFilePath)
         {
+            if (string.IsNullOrEmpty(projectFilePath))
+            {
+                throw new ArgumentException("File path wasn't provided.");
+            }
+
+            if (!File.Exists(projectFilePath))
+            {
+                throw new ArgumentException($"File path doesn't exist: {projectFilePath}");
+            }
+
             try
             {
+                // Load the .csproj file as XML
                 XDocument csproj = XDocument.Load(projectFilePath);
-                XNamespace? ns = csproj.Root?.Name.Namespace;
+                XNamespace ns = csproj.Root?.Name.Namespace ?? throw new Exception("Could not determine XML namespace.");
 
-                if (ns == null)
-                    throw new Exception("Could not find namespace");
-
-                // Check for AssemblyName
+                // Attempt to find the <AssemblyName> element
                 var assemblyNameElement = csproj.Descendants(ns + "AssemblyName").FirstOrDefault();
                 if (assemblyNameElement != null && !string.IsNullOrEmpty(assemblyNameElement.Value))
                 {
-                    return assemblyNameElement.Value;
+                    return assemblyNameElement.Value.Trim();
                 }
 
-                // Check for RootNamespace
+                // Attempt to find the <RootNamespace> element
                 var rootNamespaceElement = csproj.Descendants(ns + "RootNamespace").FirstOrDefault();
                 if (rootNamespaceElement != null && !string.IsNullOrEmpty(rootNamespaceElement.Value))
                 {
-                    return rootNamespaceElement.Value;
+                    return rootNamespaceElement.Value.Trim();
                 }
 
-                // Fallback to project file name
-                string fileNameWithoutExtension = System.IO.Path.GetFileNameWithoutExtension(projectFilePath);
-
-                // Ensure the file name is treated as the full namespace (e.g., "DataAccess.Reporting")
-                if (!string.IsNullOrEmpty(fileNameWithoutExtension))
+                // Fallback: Use the file name without the ".csproj" extension as the namespace
+                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(projectFilePath);
+                if (string.IsNullOrEmpty(fileNameWithoutExtension))
                 {
-                    return fileNameWithoutExtension;
+                    throw new Exception("Failed to extract file name from project file path.");
                 }
-            }
-            catch
-            {
-                // Log exception or handle as needed
-            }
 
-            return null;
+                // Return the full file name as the namespace
+                return fileNameWithoutExtension;
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error in GetProjectNamespace: {ex.Message}");
+                return null;
+            }
         }
 
     }
