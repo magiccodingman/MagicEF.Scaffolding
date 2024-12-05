@@ -17,14 +17,16 @@ namespace MagicEf.Scaffold.Helpers
                 XNamespace? ns = csproj.Root?.Name.Namespace;
 
                 if (ns == null)
-                    throw new Exception("could not find namespace");
+                    throw new Exception("Could not find namespace");
 
+                // Check for AssemblyName
                 var assemblyNameElement = csproj.Descendants(ns + "AssemblyName").FirstOrDefault();
                 if (assemblyNameElement != null && !string.IsNullOrEmpty(assemblyNameElement.Value))
                 {
                     return assemblyNameElement.Value;
                 }
 
+                // Check for RootNamespace
                 var rootNamespaceElement = csproj.Descendants(ns + "RootNamespace").FirstOrDefault();
                 if (rootNamespaceElement != null && !string.IsNullOrEmpty(rootNamespaceElement.Value))
                 {
@@ -32,12 +34,21 @@ namespace MagicEf.Scaffold.Helpers
                 }
 
                 // Fallback to project file name
-                return System.IO.Path.GetFileNameWithoutExtension(projectFilePath);
+                string fileNameWithoutExtension = System.IO.Path.GetFileNameWithoutExtension(projectFilePath);
+
+                // Ensure the file name is treated as the full namespace (e.g., "DataAccess.Reporting")
+                if (!string.IsNullOrEmpty(fileNameWithoutExtension))
+                {
+                    return fileNameWithoutExtension;
+                }
             }
             catch
             {
-                return null;
+                // Log exception or handle as needed
             }
+
+            return null;
         }
+
     }
 }
