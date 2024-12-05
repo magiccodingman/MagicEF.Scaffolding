@@ -58,7 +58,7 @@ public partial class MyDbContext : ReadOnlyDbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer(GetConnectionString());
 
-    internal string GetConnectionString()
+    public string GetConnectionString()
     {
         // Write your logic to return the connection string
     }
