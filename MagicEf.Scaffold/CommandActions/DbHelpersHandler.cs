@@ -193,7 +193,7 @@ namespace {namespaceName}
     public interface IReadOnlyRepository<TEntity>
     {{
         TEntity GetById(object id);
-        IEnumerable<TEntity> GetAll();
+        IQueryable<TEntity> GetAll();
     }}
 }}";
 
@@ -257,7 +257,7 @@ namespace {namespaceName}
             _dbContext = new DbHelper().Get{className}();
             _dbSet = _dbContext.Set<TEntity>();
         }}
-        public virtual IEnumerable<TEntity> GetAll()
+        public virtual IQueryable<TEntity> GetAll()
         {{
             return _dbSet;
         }}
