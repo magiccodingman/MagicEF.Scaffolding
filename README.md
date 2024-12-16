@@ -68,7 +68,7 @@ public partial class MyDbContext : ReadOnlyDbContext
 }
 ```
 
-**Important**: Copy this template exactly, including the inheritance from `ReadOnlyDbContext`, which will be generated in later steps.
+**Important**: Copy this template exactly, including the inheritance from `ReadOnlyDbContext`, which will be generated in later steps. I also suggest you create this after you run the `--scaffoldProtocol` first.
 
 ## Scaffolding with `dotnet ef`
 
