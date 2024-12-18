@@ -307,8 +307,7 @@ namespace {namespaceName}
                 return;
             }
 
-            string content = $@"using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
+            string content = $@"using System.Linq.Expressions;
 
 namespace {namespaceName}
 {{
