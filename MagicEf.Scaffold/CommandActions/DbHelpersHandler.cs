@@ -257,9 +257,20 @@ namespace {namespaceName}
             _dbContext = new DbHelper().Get{className}();
             _dbSet = _dbContext.Set<TEntity>();
         }}
-        public virtual IQueryable<TEntity> GetAll()
+        public virtual IQueryable<TEntity> GetAll({className}? _ContextOverride = null)
         {{
-            return _dbSet;
+            if (_ContextOverride != null)
+                return _ContextOverride.Set<TEntity>();
+            else
+                return _dbSet;
+        }}
+
+        public virtual IQueryable<TEntity> GetAllNoTracking({className}? _ContextOverride = null)
+        {{
+            if (_ContextOverride != null)
+                return _ContextOverride.Set<TEntity>().AsNoTracking();
+            else
+                return _dbSet.AsNoTracking();
         }}
     }}
 }}";
