@@ -208,43 +208,86 @@ var result = repository.GetAll().FirstOrDefault(x => x.Name == "Sample");
 
 ---
 
-## Repository Base and Context Passing
+## Repository Base, Context Passing, and Advanced Querying
+
+The repository base provided in this project introduces several powerful features to streamline database access and simplify complex queries. These features include context sharing, `WithContext` methods for effortless context management, and a robust `LazyLoad` helper for post-context data retrieval.
+
+---
 
 ### Repository Base Overview
 
-The repository base in this project provides two foundational methods for querying entities: `GetAll` and `GetAllNoTracking`. These methods allow seamless access to your database entities while offering flexibility to override the default `DbContext` used for querying. This flexibility ensures optimal performance and control, especially in scenarios requiring shared database contexts.
+At its core, the repository base provides methods for retrieving entities from the database using Entity Framework Core. These methods are designed with flexibility in mind, allowing you to:
+1. Override the default `DbContext` when needed.
+2. Use "no tracking" for optimized read-only queries.
+3. Extract the context (`WithContext`) for easy reuse in multi-repository operations.
 
 #### Method Definitions
 
 1. **`GetAll`**
-    ```csharp
-    public virtual IQueryable<TEntity> GetAll(SayouDbContext _ContextOverride = null)
-    {
-        if (_ContextOverride != null)
-            return _ContextOverride.Set<TEntity>();
-        else
-            return _dbSet;
-    }
-    ```
-   This method retrieves all entities of a specific type (`TEntity`). By default, it uses the repository's primary `DbContext`, but an override can be provided for custom scenarios.
+   ```csharp
+   public virtual IQueryable<TEntity> GetAll(DbContext _ContextOverride = null)
+   {
+       if (_ContextOverride != null)
+           return _ContextOverride.Set<TEntity>();
+       else
+           return _dbSet;
+   }
+   ```
+   Retrieves all entities of type `TEntity`. It uses the default context unless an override is provided.
 
 2. **`GetAllNoTracking`**
-    ```csharp
-    public virtual IQueryable<TEntity> GetAllNoTracking(SayouDbContext _ContextOverride = null)
-    {
-        if (_ContextOverride != null)
-            return _ContextOverride.Set<TEntity>().AsNoTracking();
-        else
-            return _dbSet.AsNoTracking();
-    }
-    ```
-   Similar to `GetAll`, this method retrieves entities but disables change tracking to improve query performance. It is ideal for read-heavy operations where changes to entities are not needed.
+   ```csharp
+   public virtual IQueryable<TEntity> GetAllNoTracking(DbContext _ContextOverride = null)
+   {
+       if (_ContextOverride != null)
+           return _ContextOverride.Set<TEntity>().AsNoTracking();
+       else
+           return _dbSet.AsNoTracking();
+   }
+   ```
+   Similar to `GetAll`, but disables change tracking, making it ideal for read-only queries.
 
-### Context Passing Example
+3. **`GetAllWithContext`**
+   ```csharp
+   public virtual IQueryable<TEntity> GetAllWithContext(out DbContext context)
+   {
+       context = _dbContext;
+       return GetAll(context);
+   }
+   ```
+   Returns the entities while also providing the active context via an `out` parameter. This enables easy sharing of the context for subsequent queries.
 
-Passing a shared context allows you to group multiple repository calls under the same `DbContext`, which is particularly useful for operations involving joins or transactions.
+4. **`GetAllNoTrackingWithContext`**
+   ```csharp
+   public virtual IQueryable<TEntity> GetAllNoTrackingWithContext(out DbContext context)
+   {
+       context = _dbContext;
+       return GetAllNoTracking(context);
+   }
+   ```
+   Combines the advantages of "no tracking" queries with the ability to extract the active context.
 
-#### Example Usage: Context Passing with Joins
+---
+
+### Context Passing with `WithContext`
+
+Using `WithContext` methods allows developers to efficiently reuse the same context across multiple repository calls, simplifying complex operations.
+
+#### Example: Context Passing in Joins
+
+```csharp
+var data = new EntityARepository().GetAllWithContext(out var sharedContext)
+    .Where(a => a.IsActive)
+    .Join(new EntityBRepository().GetAll(sharedContext),
+          a => a.ForeignKeyId,
+          b => b.Id,
+          (a, b) => new { EntityA = a, EntityB = b })
+    .ToList();
+```
+
+In this example:
+- The `sharedContext` is extracted once using `GetAllWithContext`.
+- It is then reused across multiple repositories to ensure a single database connection is used.
 
 ```csharp
 using (var sharedContext = new MyDbContext())
@@ -273,12 +316,38 @@ In this example:
 - The same `sharedContext` is passed to both repositories, ensuring a single connection to the database.
 - The `Join` operation leverages LINQ to seamlessly combine data from multiple entities, optimized for SQL generation.
 
-### Benefits of Context Passing
-- **Performance**: Reduces the overhead of creating multiple `DbContext` instances.
-- **Consistency**: Ensures all operations share the same transaction scope.
-- **Flexibility**: Facilitates complex queries involving multiple repositories.
+---
+
+### Advanced Lazy Loading: `LazyLoad`
+
+Lazy loading traditionally depends on an active Entity Framework context, which is not available after a query is executed. The `LazyLoad` helper enables post-context lazy loading, allowing you to load related data even after the context has been disposed.
+
+#### LazyLoad Usage
+
+```csharp
+var entity = new EntityRepository().GetById(1);
+var relatedData = entity.LazyLoad(x => x.RelatedEntity);
+```
+
+In this example:
+- `LazyLoad` dynamically fetches the `RelatedEntity` of `entity` without requiring an active context.
+- This feature is ideal for scenarios where additional data is needed after the primary query execution.
 
 ---
+
+### Best Practices for Query Performance
+
+1. **Pre-loading Collections**
+   For collections, it's recommended to pre-load related data using `Include` to minimize performance overhead:
+   ```csharp
+   var entities = new EntityRepository().GetAll().Include(x => x.RelatedEntities).ToList();
+   ```
+
+2. **Avoid Overusing LazyLoad**
+   Use `LazyLoad` sparingly for single-entity relationships. For collections, pre-loading is preferable to avoid multiple database calls.
+
+---
+
 
 ## Conclusion
 
