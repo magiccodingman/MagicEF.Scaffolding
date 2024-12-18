@@ -60,7 +60,7 @@ public partial class MyDbContext : ReadOnlyDbContext
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer(GetConnectionString()).UseLazyLoadingProxies(); // Adding Lazy loading proxies is optional. Use what you want or don't use whatever.
+        => optionsBuilder.UseSqlServer(GetConnectionString());
 
     public string GetConnectionString()
     {
