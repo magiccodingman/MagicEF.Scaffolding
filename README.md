@@ -28,9 +28,10 @@ Navigate to the directory of your class library and run the following commands:
 dotnet add package Microsoft.EntityFrameworkCore.SqlServer
 dotnet add package Microsoft.EntityFrameworkCore.Tools
 dotnet add package  Microsoft.EntityFrameworkCore.Design
+dotnet add package  Microsoft.EntityFrameworkCore.Proxies
 ```
 
-Please note that the, "Microsoft.EntityFrameworkCore.Design" may need to be added with the version matching your framework. I personally have a NET 8.0 project and am using the 8.0.0 version and added all of these as a nuget package to my project.
+Please note that the, "Microsoft.EntityFrameworkCore.Design" may need to be added with the version matching your framework. I personally have a NET 8.0 project and am using the 8.0.0 version and added all of these as a nuget package to my project. Also note that the Proxies package is optional if you don't wish do do LazyLoading or similar.
 
 ## Project Setup
 
@@ -59,7 +60,7 @@ public partial class MyDbContext : ReadOnlyDbContext
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer(GetConnectionString());
+        => optionsBuilder.UseSqlServer(GetConnectionString()).UseLazyLoadingProxies();
 
     public string GetConnectionString()
     {
