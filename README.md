@@ -205,6 +205,80 @@ Leverage LINQ to build SQL queries seamlessly:
 var result = repository.GetAll().FirstOrDefault(x => x.Name == "Sample");
 ```
 
+---
+
+## Repository Base and Context Passing
+
+### Repository Base Overview
+
+The repository base in this project provides two foundational methods for querying entities: `GetAll` and `GetAllNoTracking`. These methods allow seamless access to your database entities while offering flexibility to override the default `DbContext` used for querying. This flexibility ensures optimal performance and control, especially in scenarios requiring shared database contexts.
+
+#### Method Definitions
+
+1. **`GetAll`**
+    ```csharp
+    public virtual IQueryable<TEntity> GetAll(SayouDbContext _ContextOverride = null)
+    {
+        if (_ContextOverride != null)
+            return _ContextOverride.Set<TEntity>();
+        else
+            return _dbSet;
+    }
+    ```
+   This method retrieves all entities of a specific type (`TEntity`). By default, it uses the repository's primary `DbContext`, but an override can be provided for custom scenarios.
+
+2. **`GetAllNoTracking`**
+    ```csharp
+    public virtual IQueryable<TEntity> GetAllNoTracking(SayouDbContext _ContextOverride = null)
+    {
+        if (_ContextOverride != null)
+            return _ContextOverride.Set<TEntity>().AsNoTracking();
+        else
+            return _dbSet.AsNoTracking();
+    }
+    ```
+   Similar to `GetAll`, this method retrieves entities but disables change tracking to improve query performance. It is ideal for read-heavy operations where changes to entities are not needed.
+
+### Context Passing Example
+
+Passing a shared context allows you to group multiple repository calls under the same `DbContext`, which is particularly useful for operations involving joins or transactions.
+
+#### Example Usage: Context Passing with Joins
+
+```csharp
+using (var sharedContext = new MyDbContext())
+{
+    // Query all eligible entities
+    var query = new MyRepository().GetAllNoTracking(sharedContext)
+        .Join(new AnotherRepository().GetAllNoTracking(sharedContext),
+              x => x.ForeignKeyId,
+              y => y.Id,
+              (x, y) => new { EntityX = x, EntityY = y })
+        .Where(joined => joined.EntityX.IsActive && joined.EntityY.CreatedDate > DateTime.UtcNow.AddMonths(-1))
+        .Select(joined => new
+        {
+            EntityXName = joined.EntityX.Name,
+            EntityYDescription = joined.EntityY.Description
+        });
+
+    foreach (var result in query)
+    {
+        Console.WriteLine($"EntityX: {result.EntityXName}, EntityY: {result.EntityYDescription}");
+    }
+}
+```
+
+In this example:
+- The same `sharedContext` is passed to both repositories, ensuring a single connection to the database.
+- The `Join` operation leverages LINQ to seamlessly combine data from multiple entities, optimized for SQL generation.
+
+### Benefits of Context Passing
+- **Performance**: Reduces the overhead of creating multiple `DbContext` instances.
+- **Consistency**: Ensures all operations share the same transaction scope.
+- **Flexibility**: Facilitates complex queries involving multiple repositories.
+
+---
+
 ## Conclusion
 
 Magic EF Scaffolding revolutionizes database-first workflows by automating tedious tasks, enabling effortless integration of database changes into your C# code. Whether you’re running locally or in a pipeline, this tool makes database-first EF development simple, efficient, and scalable. Say goodbye to manual adjustments and embrace the future of database-first workflows!
