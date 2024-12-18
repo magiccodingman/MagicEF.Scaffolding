@@ -70,10 +70,11 @@ namespace MagicEf.Scaffold.CommandActions
             CreateDbCacheClass(dbHelpersPath, namespaceName, className);
             CreateDbHelperClass(dbHelpersPath, namespaceName, className);
             CreateEntityHelperClass(dbHelpersPath, namespaceName);
-            CreateIReadOnlyRepositoryInterface(dbHelpersPath, namespaceName);
+            CreateIReadOnlyRepositoryInterface(dbHelpersPath, namespaceName, className);
             CreateIRepositoryInterface(dbHelpersPath, namespaceName);
             CreateReadOnlyRepositoryBaseClass(dbHelpersPath, namespaceName, className);
             CreateRepositoryBaseClass(dbHelpersPath, namespaceName, className);
+            CreateLazyLoadExtensionClass(dbHelpersPath, namespaceName, className);
 
             Console.WriteLine("DbHelpers files have been generated successfully.");
         }
@@ -175,7 +176,7 @@ namespace {namespaceName}
             Console.WriteLine($"Created {fileName}");
         }
 
-        private void CreateIReadOnlyRepositoryInterface(string dbHelpersPath, string namespaceName)
+        private void CreateIReadOnlyRepositoryInterface(string dbHelpersPath, string namespaceName, string className)
         {
             string fileName = "IReadOnlyRepository.cs";
             string filePath = Path.Combine(dbHelpersPath, fileName);
@@ -193,7 +194,10 @@ namespace {namespaceName}
     public interface IReadOnlyRepository<TEntity>
     {{
         TEntity GetById(object id);
-        IQueryable<TEntity> GetAll();
+        IQueryable<TEntity> GetAll({className}? _ContextOverride = null);
+        IQueryable<TEntity> GetAllWithContext(out {className} context);
+        IQueryable<TEntity> GetAllNoTracking({className}? _ContextOverride = null);
+        IQueryable<TEntity> GetAllNoTrackingWithContext(out {className} context);
     }}
 }}";
 
@@ -264,6 +268,12 @@ namespace {namespaceName}
             else
                 return _dbSet;
         }}
+        
+        public virtual IQueryable<TEntity> GetAllWithContext(out {className} context)
+        {{
+            context = _dbContext;
+            return GetAll(context);
+        }}
 
         public virtual IQueryable<TEntity> GetAllNoTracking({className}? _ContextOverride = null)
         {{
@@ -271,6 +281,73 @@ namespace {namespaceName}
                 return _ContextOverride.Set<TEntity>().AsNoTracking();
             else
                 return _dbSet.AsNoTracking();
+        }}
+
+        public virtual IQueryable<TEntity> GetAllNoTrackingWithContext(out {className} context)
+        {{
+            context = _dbContext;
+            return GetAllNoTracking(context);
+        }}
+
+    }}
+}}";
+
+            File.WriteAllText(filePath, content);
+            Console.WriteLine($"Created {fileName}");
+        }
+
+        private void CreateLazyLoadExtensionClass(string dbHelpersPath, string namespaceName, string className)
+        {
+            string fileName = "LazyLoadExtension.cs";
+            string filePath = Path.Combine(dbHelpersPath, fileName);
+
+            if (File.Exists(filePath))
+            {
+                Console.WriteLine($"File {fileName} already exists.");
+                return;
+            }
+
+            string content = $@"using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+
+namespace {namespaceName}
+{{
+    public static class LazyLoadExtension
+    {{
+        public static TProperty LazyLoad<TEntity, TProperty>(
+    this TEntity entity,
+    Expression<Func<TEntity, TProperty?>> navigationExpression
+) where TEntity : class
+  where TProperty : class
+        {{
+            // Get the compiled accessor for the navigation property
+            var navigationAccessor = navigationExpression.Compile();
+
+            // Get the current value of the navigation property
+            var navigationProperty = navigationAccessor(entity);
+
+            if (navigationProperty == null)
+            {{
+                using (var dbContext = new DbHelper().Get{className}())
+                {{
+                    // Attach the entity to the context if necessary
+                    var entry = dbContext.Entry(entity);
+
+                    if (!entry.IsKeySet)
+                    {{
+                        dbContext.Attach(entity);
+                    }}
+
+                    // Load the navigation property explicitly
+                    entry.Reference(navigationExpression).Load();
+
+                    // Update the navigation property after loading
+                    navigationProperty = navigationAccessor(entity);
+                }}
+            }}
+
+            // Return the now-loaded navigation property
+            return navigationProperty!;
         }}
     }}
 }}";
