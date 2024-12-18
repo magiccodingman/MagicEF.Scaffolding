@@ -31,7 +31,7 @@ dotnet add package  Microsoft.EntityFrameworkCore.Design
 dotnet add package  Microsoft.EntityFrameworkCore.Proxies
 ```
 
-Please note that the, "Microsoft.EntityFrameworkCore.Design" may need to be added with the version matching your framework. I personally have a NET 8.0 project and am using the 8.0.0 version and added all of these as a nuget package to my project. Also note that the Proxies package is optional if you don't wish do do LazyLoading or similar.
+Please note that the, "Microsoft.EntityFrameworkCore.Design" may need to be added with the version matching your framework. I personally have a NET 8.0 project and am using the 8.0.0 version and added all of these as a nuget package to my project.
 
 ## Project Setup
 
@@ -60,7 +60,7 @@ public partial class MyDbContext : ReadOnlyDbContext
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer(GetConnectionString()).UseLazyLoadingProxies();
+        => optionsBuilder.UseSqlServer(GetConnectionString()).UseLazyLoadingProxies(); // Adding Lazy loading proxies is optional. Use what you want or don't use whatever.
 
     public string GetConnectionString()
     {
