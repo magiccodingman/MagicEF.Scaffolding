@@ -71,10 +71,18 @@ public partial class MyDbContext : ReadOnlyDbContext
 
 **Important**: Copy this template exactly, including the inheritance from `ReadOnlyDbContext`, which will be generated in later steps. I also suggest you create this after you run the `--scaffoldProtocol` first.
 
-Then pre-create the ReadOnlyRepositoryBase with the following example. This'll get overwritten, but it's just to have the code not freak out on the initial run:
+Then pre-create the ReadOnlyDbContext with the following example. This'll get overwritten, but it's just to have the code not freak out on the initial run:
 ```csharp
-public class ReadOnlyRepositoryBase<TEntity> where TEntity : class
+public partial class ReadOnlyDbContext : DbContext
 {
+    public ReadOnlyDbContext()
+    {
+    }
+
+    public ReadOnlyDbContext(DbContextOptions<ReadOnlyDbContext> options)
+        : base(options)
+    {
+    }
 }
 ```
 
