@@ -71,6 +71,13 @@ public partial class MyDbContext : ReadOnlyDbContext
 
 **Important**: Copy this template exactly, including the inheritance from `ReadOnlyDbContext`, which will be generated in later steps. I also suggest you create this after you run the `--scaffoldProtocol` first.
 
+Then pre-create the ReadOnlyRepositoryBase with the following example. This'll get overwritten, but it's just to have the code not freak out on the initial run:
+```csharp
+public class ReadOnlyRepositoryBase<TEntity> where TEntity : class
+{
+}
+```
+
 ## Scaffolding with `dotnet ef`
 
 To scaffold your database models, use the following PowerShell command:
