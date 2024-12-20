@@ -65,6 +65,7 @@ public partial class MyDbContext : ReadOnlyDbContext
     public string GetConnectionString()
     {
         // Write your logic to return the connection string
+        return null; // return the actual connection string!
     }
 }
 ```
