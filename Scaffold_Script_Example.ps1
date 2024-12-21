@@ -3,7 +3,7 @@
 $connectionString = "{Your_Connection_String}" # Use a safe string like AD auth
 
 # Define user-specified variables
-$projectFileName = "{csproj_full_file_name}" # Name of your project file (assumes .\ by default)
+$projectFileName = "{csproj_file_name}.csproj" # Name of your project file (assumes .\ by default)
 $namespace = "{Project_Namespace}"             # Project namespace
 $dbContextFile = "{Your_DbContext_Name}"            # Name of your DbContext file
 
