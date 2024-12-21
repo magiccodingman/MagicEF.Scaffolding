@@ -60,16 +60,35 @@ public partial class MyDbContext : ReadOnlyDbContext
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer(GetConnectionString()).UseLazyLoadingProxies(); // Adding Lazy loading proxies is optional. Use what you want or don't use whatever.
+        => optionsBuilder.UseSqlServer(GetConnectionString());
 
     public string GetConnectionString()
     {
         // Write your logic to return the connection string
+        return null; // return the actual connection string!
     }
 }
 ```
 
 **Important**: Copy this template exactly, including the inheritance from `ReadOnlyDbContext`, which will be generated in later steps. I also suggest you create this after you run the `--scaffoldProtocol` first.
+
+Then pre-create the ReadOnlyDbContext with the following example. This'll get overwritten, but it's just to have the code not freak out on the initial run:
+```csharp
+public partial class ReadOnlyDbContext : DbContext
+{
+    public ReadOnlyDbContext()
+    {
+    }
+
+    public ReadOnlyDbContext(DbContextOptions<ReadOnlyDbContext> options)
+        : base(options)
+    {
+    }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    => optionsBuilder.UseSqlServer("");
+    }
+```
 
 ## Scaffolding with `dotnet ef`
 
