@@ -44,7 +44,13 @@ Create the following folder structure in your project:
 - `Interfaces`
 - `MetaDataClasses`
 
-### Initial DbContext Setup
+### Automated Initial DbContext Setup
+This automated initial setup will automatically set up your project based on the suggested protocol and specifications.
+```bash
+MagicEf --initialSetup --projectFilePath "{Full_Path_To_csproj_File}" --namespace "{Project_Namespace}" --dbContext "{Desired_DbContext_Class_Name}"
+```
+
+#### Manual Initial setup
 At the base directory of your project, create a new C# file for your custom `DbContext`. The filename is up to you. Use the following template for the class:
 
 ```csharp
