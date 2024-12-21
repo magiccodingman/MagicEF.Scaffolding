@@ -8,8 +8,15 @@ namespace MagicEf.Scaffold
 {
     public static class FileHelper
     {
-        public static string NormalizePath(string filePath)
+        public static string NormalizePath(string? filePath)
         {
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                string msg = "File path cannot be null or empty";
+                Console.WriteLine(msg);
+                throw new Exception(msg);
+            }
+               
             return Path.GetFullPath(filePath);
         }
 

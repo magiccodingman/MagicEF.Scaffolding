@@ -51,6 +51,11 @@ namespace MagicEf.Scaffold
                     separateVirtualPropertiesHandler.Handle(args);
                     break;
 
+                case "--initialSetup":
+                    var initialSetupHandler = new InitialSetupHandler();
+                    initialSetupHandler.Handle(args);
+                    break;
+
                 default:
                     Console.WriteLine("Unknown command. Use --help for usage information.");
                     break;
