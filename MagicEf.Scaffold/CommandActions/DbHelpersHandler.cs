@@ -103,7 +103,7 @@ namespace {namespaceName}
 
         public {className} Get{className}()
         {{
-            return new {className}(new DbContextOptionsBuilder<{className}>().UseSqlServer(new {className}().GetConnectionString()).Options);
+            return new {className}(new DbContextOptionsBuilder<ReadOnlyDbContext>().UseSqlServer(new {className}().GetConnectionString()).Options);
         }}
     }}
 }}";
