@@ -67,7 +67,6 @@ namespace MagicEf.Scaffold.CommandActions
             }
 
             // Generate the required files in the DbHelpers directory
-            CreateDbCacheClass(dbHelpersPath, namespaceName, className);
             CreateDbHelperClass(dbHelpersPath, namespaceName, className);
             CreateEntityHelperClass(dbHelpersPath, namespaceName);
             CreateIReadOnlyRepositoryInterface(dbHelpersPath, namespaceName, className);
@@ -77,30 +76,6 @@ namespace MagicEf.Scaffold.CommandActions
             CreateLazyLoadExtensionClass(dbHelpersPath, namespaceName, className);
 
             Console.WriteLine("DbHelpers files have been generated successfully.");
-        }
-
-        private void CreateDbCacheClass(string dbHelpersPath, string namespaceName, string className)
-        {
-            string fileName = "DbCache.cs";
-            string filePath = Path.Combine(dbHelpersPath, fileName);
-
-            if (File.Exists(filePath))
-            {
-                Console.WriteLine($"File {fileName} already exists.");
-                return;
-            }
-
-            string content = $@"namespace {namespaceName}
-{{
-    public static class DbCache
-    {{
-        public static {className}.DbEnvironment dbEnvironment {{ get; set; }}
-        public static string DecryptedConnectionString {{ get; set; }}
-    }}
-}}";
-
-            File.WriteAllText(filePath, content);
-            Console.WriteLine($"Created {fileName}");
         }
 
         private void CreateDbHelperClass(string dbHelpersPath, string namespaceName, string className)
