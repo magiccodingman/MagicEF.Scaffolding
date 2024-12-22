@@ -22,7 +22,7 @@ Then you can use this in any environment easily and not have to target the exe a
 #### Recommended Setup
 It’s highly recommended to use a separate C# class library for your database models and scaffolding. Combining this with your primary project is not advised. Create a new C# Class Library project if you haven’t already.
 
-## Automated Initial DbContext Setup
+## Automated Setup & Use
 This automated initial setup will automatically set up your project based on the suggested protocol and specifications.
 
 #### Option 1: Automated setup W/ Script (recommended)
