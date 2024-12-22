@@ -22,7 +22,38 @@ Then you can use this in any environment easily and not have to target the exe a
 #### Recommended Setup
 It’s highly recommended to use a separate C# class library for your database models and scaffolding. Combining this with your primary project is not advised. Create a new C# Class Library project if you haven’t already.
 
-#### Install Required NuGet Packages
+## Automated Initial DbContext Setup
+This automated initial setup will automatically set up your project based on the suggested protocol and specifications.
+
+#### Option 1: Automated setup W/ Script (recommended)
+Use the ``Scaffold_Script_Exemple.ps1`` provided in the repository. Simply place the file in your Csharp project directory location next to the csproj file. Edit the file and replace the first 4 variables based on your specifications:
+```ps1
+# Replace this with your actual connection string
+$connectionString = "{Your_Connection_String}" # Use a safe string like AD auth
+
+# Define user-specified variables
+$projectFileName = "{csproj_file_name}.csproj" # Name of your project file (assumes .\ by default)
+$namespace = "{Project_Namespace}"             # Project namespace
+$dbContextFile = "{Your_DbContext_Name}"            # Name of your DbContext file
+```
+
+Then open a powershell or command line (any OS works) and CD to the project directory. Finally run ``.\Scaffold_Script_Example.ps1`` or whatever is the equivalent in your OS. And then like magic it'll install everything for you! It's highly suggested you utilize this route to work with Magic EF. Anything else will require deeper understanding and is more likely for enterprise level setup where additional separate is required. 
+
+#### Use The script
+You can re-run this script safely over and over however many times you wish. Your changes will not be removed or altered. This will scaffold your database and apply new MagicEF protocol extensions whenever you make database changes. This script duals as the initial setup and a fantastic easy to use script for use whenever you want to run the scaffold. Magic EF is meant to be used alongside DotNet scaffolding and this bundles it together for you!
+
+Additionally, this script can be put into any pipeline for example (aka Azure pipelines). Thus resolving age long issues with database first multi environment pipeline issues. As you can run the script per environment and each environment will safely scaffold and be altered/fixed by MagicEF to allow you to dynamically scaffold in your environments safely! MagicEF does multiple things behind the scenes to assist in this process, but do you want to know, or do you want to just celabrate that I made it this easy ;)
+
+#### Option 2: Automated setup W/O script
+You can run the following command to start the initial setup for your project. This isn't fully suggested nor is it fully considered, "Automated" without the script. As you'll still need to following the rest of the manual setup instructions. Though you can skip steps 1-3 if you run this first.
+```bash
+MagicEf --initialSetup --projectFilePath "{Full_Path_To_csproj_File}" --namespace "{Project_Namespace}" --dbContext "{Desired_DbContext_Class_Name}"
+```
+
+
+## Manual Setup
+The following is the instructions to manually setup MagicEF
+#### Step 1: Install Required NuGet Packages
 Navigate to the directory of your class library and run the following commands:
 ```bash
 dotnet add package Microsoft.EntityFrameworkCore.SqlServer
@@ -31,11 +62,7 @@ dotnet add package  Microsoft.EntityFrameworkCore.Design
 dotnet add package  Microsoft.EntityFrameworkCore.Proxies
 ```
 
-Please note that the, "Microsoft.EntityFrameworkCore.Design" may need to be added with the version matching your framework. I personally have a NET 8.0 project and am using the 8.0.0 version and added all of these as a nuget package to my project.
-
-## Project Setup
-
-### Directory Structure
+#### Step 2: Directory Structure
 Create the following folder structure in your project:
 - `Concrete`
 - `DbHelpers`
@@ -44,13 +71,7 @@ Create the following folder structure in your project:
 - `Interfaces`
 - `MetaDataClasses`
 
-### Automated Initial DbContext Setup
-This automated initial setup will automatically set up your project based on the suggested protocol and specifications.
-```bash
-MagicEf --initialSetup --projectFilePath "{Full_Path_To_csproj_File}" --namespace "{Project_Namespace}" --dbContext "{Desired_DbContext_Class_Name}"
-```
-
-#### Manual Initial setup
+#### Step 3: CS file Manual Initial setup
 At the base directory of your project, create a new C# file for your custom `DbContext`. The filename is up to you. Use the following template for the class:
 
 ```csharp
@@ -96,9 +117,9 @@ public partial class ReadOnlyDbContext : DbContext
     }
 ```
 
-## Scaffolding with `dotnet ef`
+#### Step 4: Scaffolding with `dotnet ef`
 
-To scaffold your database models, use the following PowerShell command:
+You can scaffold directly utilizing the command line if you wish, but I'm going to show you how to do this with PowerShell.
 
 ```powershell
 cd "<path-to-your-project>"
@@ -111,8 +132,6 @@ $modelsDirectory = "DbModels"   # Scaffolded models directory
 $contextDirectory = "."         # DbContext remains in the base directory
 
 # Execute scaffolding
-```
-```powershell
 dotnet ef dbcontext scaffold $connectionString Microsoft.EntityFrameworkCore.SqlServer `
     --context ReadOnlyDbContext `
     --output-dir $modelsDirectory `
