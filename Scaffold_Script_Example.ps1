@@ -42,7 +42,7 @@ MagicEF --scaffoldProtocol `
     --verbose
 
 MagicEF --ambiguousIndex --directoryPath $modelsDirectory
-MagicEF --removeOnConfiguring --filePath ".\$dbContextFile.cs"
+MagicEF --removeOnConfiguring --filePath ".\ReadOnlyDbContext.cs"
 MagicEF --separateVirtualProperties --directoryPath $modelsDirectory
 MagicEF --dbHelpers $dbHelpersDirectory --customContextFilePath ".\$dbContextFile.cs"
 
