@@ -49,7 +49,7 @@ This script can be utilized within Azure pipeline or any pipeline process. As al
 
 ``--removeOnConfiguring``
 
-MagicEF runs after dotnet scaffold. Once a dotnet scaffold occurs, code breaking changes occurs within the scaffolded DbContext (aka the MagicEF ReadOnlyDbContext). These commands remove code breaking changes that occur after any dotnet scaffold. Safely allowing you to proceed after a scaffold to match your context to the environment you're moving too! And baked into MagicEF's protocol is a process that avoids many more significant challenges that normally occur with pipeline environment changes.
+MagicEF runs after dotnet scaffold. Once a dotnet scaffold occurs, code breaking changes occurs within the scaffolded DbContext (aka the MagicEF ReadOnlyDbContext). Additional ambiguous index issues is commonplace on all scaffolded models. These commands remove code breaking changes that occur after any dotnet scaffold. Safely allowing you to proceed after a scaffold to match your context to the environment you're moving too! And baked into MagicEF's protocol is a process that avoids many more significant challenges that normally occur with pipeline environment changes.
 
 ### Option 2: Automated setup W/O script
 You can run the following command to start the initial setup for your project. This isn't fully suggested nor is it fully considered, "Automated" without the script. As you'll still need to following the rest of the manual setup instructions. Though you can skip steps 1-3 if you run this first.
