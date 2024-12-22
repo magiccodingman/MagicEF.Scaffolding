@@ -19,6 +19,12 @@ dotnet tool install --global MagicEf
 ```
 Then you can use this in any environment easily and not have to target the exe and so on.
 
+
+## Video Tutorials
+I made some video tutorials. Tried my best to go over what's important. In my opinion, the GIT/Wiki is easier and faster to digest, but I also prefer reading! Up to you, I just wanted to make it easier to learn how to use MagicEF with however you wish to digest :)
+Youtube video tutorial on '**how to setup**': [How to Setup]([https://www.youtube.com/watch?v=a1QUnEpB83Y](https://youtu.be/oRbfcgw2Q1c))
+Youtube video '**overview & how to use**': [Overview & How to Use]([https://www.youtube.com/watch?v=a1QUnEpB83Y](https://www.youtube.com/watch?v=tst1XOHJbb8))
+
 #### Recommended Setup
 It’s highly recommended to use a separate C# class library for your database models and scaffolding. Combining this with your primary project is not advised. Create a new C# Class Library project if you haven’t already.
 
