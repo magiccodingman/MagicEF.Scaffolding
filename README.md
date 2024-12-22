@@ -39,7 +39,7 @@ $dbContextFile = "{Your_DbContext_Name}"            # Name of your DbContext fil
 
 Then open a powershell or command line (any OS works) and CD to the project directory. Finally run ``.\Scaffold_Script_Example.ps1`` or whatever is the equivalent in your OS. And then like magic it'll install everything for you! It's highly suggested you utilize this route to work with Magic EF. Anything else will require deeper understanding and is more likely for enterprise level setup where additional separate is required. 
 
-#### Use The script
+### Re-Use The script (The script is magic!)
 You can re-run this script safely over and over however many times you wish. Your changes will not be removed or altered. This will scaffold your database and apply new MagicEF protocol extensions whenever you make database changes. This script duals as the initial setup and a fantastic easy to use script for use whenever you want to run the scaffold. Magic EF is meant to be used alongside DotNet scaffolding and this bundles it together for you!
 
 Additionally, this script can be put into any pipeline for example (aka Azure pipelines). Thus resolving age long issues with database first multi environment pipeline issues. As you can run the script per environment and each environment will safely scaffold and be altered/fixed by MagicEF to allow you to dynamically scaffold in your environments safely! MagicEF does multiple things behind the scenes to assist in this process, but do you want to know, or do you want to just celabrate that I made it this easy ;)
