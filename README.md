@@ -42,7 +42,11 @@ Then open a powershell or command line (any OS works) and CD to the project dire
 ### Re-Use The script (the script is magic!)
 You can re-run this script safely over and over however many times you wish. Your changes will not be removed or altered. This will scaffold your database and apply new MagicEF protocol extensions whenever you make database changes. This script duals as the initial setup and a fantastic easy to use script for use whenever you want to run the scaffold. Magic EF is meant to be used alongside DotNet scaffolding and this bundles it together for you!
 
-Additionally, this script can be put into any pipeline for example (aka Azure pipelines). Thus resolving age long issues with database first multi environment pipeline issues. As you can run the script per environment and each environment will safely scaffold and be altered/fixed by MagicEF to allow you to dynamically scaffold in your environments safely! MagicEF does multiple things behind the scenes to assist in this process, but do you want to know, or do you want to just celabrate that I made it this easy ;)
+### Script Use In Pipelines
+This script can be utilized within Azure pipeline or any pipeline process. As all the safety features are baked in on your behalf. You can now utilize database first like never before in pipelines across environments safely! How though?! Bwahahaha, let me tell you! The following commands resolve legendary database first pipeline environment issues:
+``--ambiguousIndex``
+``--removeOnConfiguring``
+MagicEF runs after dotnet scaffold. Once a dotnet scaffold occurs, code breaking changes occurs within the scaffolded DbContext (aka the MagicEF ReadOnlyDbContext). These commands remove code breaking changes that occur after any dotnet scaffold. Safely allowing you to proceed after a scaffold to match your context to the environment you're moving too! And baked into MagicEF's protocol is a process that avoids many more significant challenges that normally occur with pipeline environment changes.
 
 ### Option 2: Automated setup W/O script
 You can run the following command to start the initial setup for your project. This isn't fully suggested nor is it fully considered, "Automated" without the script. As you'll still need to following the rest of the manual setup instructions. Though you can skip steps 1-3 if you run this first.
