@@ -44,6 +44,7 @@ You can re-run this script safely over and over however many times you wish. You
 
 ### Script Use In Pipelines
 This script can be utilized within Azure pipeline or any pipeline process. As all the safety features are baked in on your behalf. You can now utilize database first like never before in pipelines across environments safely! How though?! Bwahahaha, let me tell you! The following commands resolve legendary database first pipeline environment issues:
+
 ``--ambiguousIndex``
 
 ``--removeOnConfiguring``
