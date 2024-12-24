@@ -5,6 +5,10 @@ Magic EF Scaffolding is a revolutionary project designed to make database-first 
 Read the article on Magic EF to fully digest and understand the capabilities!
 [Magic EF Article](https://magiccodingman.com/MagicEf)
 
+## Wait there's more?
+Yes there's more! Much more to the Magic EF protocol. Please reference the Wiki to see additional arguments and capabilities:
+[Magic EF Wiki](https://github.com/magiccodingman/MagicEF.Scaffolding/wiki)
+
 ## Prerequisites
 
 ### Required Tools
