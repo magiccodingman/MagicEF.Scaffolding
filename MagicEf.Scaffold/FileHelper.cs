@@ -12,7 +12,7 @@ namespace MagicEf.Scaffold
         {
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                string msg = "File path cannot be null or empty";
+                string msg = $"File path cannot be null or empty: {filePath}";
                 Console.WriteLine(msg);
                 throw new Exception(msg);
             }

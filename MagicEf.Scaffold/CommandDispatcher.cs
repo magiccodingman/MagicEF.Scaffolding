@@ -56,6 +56,16 @@ namespace MagicEf.Scaffold
                     initialSetupHandler.Handle(args);
                     break;
 
+                case "--initialShareSetupHandler":
+                    var initialShareSetupHandler = new InitialShareSetupHandler();
+                    initialShareSetupHandler.Handle(args);
+                    break;
+
+                case "--shareScaffoldProtocolHandler":
+                    var shareScaffoldProtocolHandler = new ShareScaffoldProtocolHandler();
+                    shareScaffoldProtocolHandler.Handle(args);
+                    break;
+
                 default:
                     Console.WriteLine("Unknown command. Use --help for usage information.");
                     break;

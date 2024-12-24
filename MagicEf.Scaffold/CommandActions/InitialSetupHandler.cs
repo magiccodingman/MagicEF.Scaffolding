@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MagicEf.Scaffold.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -97,7 +98,7 @@ namespace MagicEf.Scaffold.CommandActions
             Console.WriteLine("Step 1: Ensuring folders in .csproj...");
             try
             {
-                EnsureFoldersInCsproj(projectFilePath, RequiredFolders);
+                new InstallerHelper().EnsureFoldersInCsproj(projectFilePath, RequiredFolders);
                 Console.WriteLine("Folders verified and updated in .csproj.");
             }
             catch (Exception ex)
@@ -109,7 +110,7 @@ namespace MagicEf.Scaffold.CommandActions
             Console.WriteLine("Step 2: Ensuring required packages...");
             try
             {
-                EnsureRequiredPackages(projectFilePath, errors);
+                new InstallerHelper().EnsureRequiredPackages(projectFilePath, RequiredPackages, errors);
                 Console.WriteLine("Package verification completed.");
             }
             catch (Exception ex)
@@ -161,95 +162,9 @@ namespace MagicEf.Scaffold.CommandActions
             Console.WriteLine("Initial Setup Handler completed successfully!");
         }
 
-        private void EnsureFoldersInCsproj(string projectFilePath, string[] folders)
-        {
-            Console.WriteLine("Parsing .csproj file...");
-            var doc = XDocument.Load(projectFilePath);
-            var projectElement = doc.Root;
-            if (projectElement == null) throw new Exception("Invalid .csproj structure - missing root <Project> element.");
+        
 
-            Console.WriteLine("Checking for existing folder includes...");
-            var folderIncludes = projectElement.Descendants("Folder")
-                .Select(elem => elem.Attribute("Include")?.Value)
-                .Where(val => !string.IsNullOrEmpty(val))
-                .ToList();
-
-            XElement itemGroup = projectElement.Elements("ItemGroup").FirstOrDefault();
-            if (itemGroup == null)
-            {
-                Console.WriteLine("No <ItemGroup> found. Creating a new one...");
-                itemGroup = new XElement("ItemGroup");
-                projectElement.Add(itemGroup);
-            }
-
-            foreach (var folder in folders)
-            {
-                if (!folderIncludes.Contains(folder))
-                {
-                    Console.WriteLine($"Adding missing folder to .csproj: {folder}");
-                    var folderElement = new XElement("Folder", new XAttribute("Include", folder));
-                    itemGroup.Add(folderElement);
-                }
-                else
-                {
-                    Console.WriteLine($"Folder already exists in .csproj: {folder}");
-                }
-            }
-
-            Console.WriteLine("Saving updated .csproj file...");
-            doc.Save(projectFilePath);
-            Console.WriteLine(".csproj file updated successfully.");
-        }
-
-        private void EnsureRequiredPackages(string projectFilePath, List<string> errors)
-        {
-            Console.WriteLine("Parsing .csproj file for package references...");
-            var doc = XDocument.Load(projectFilePath);
-            var projectElement = doc.Root;
-            if (projectElement == null) throw new Exception("Invalid .csproj structure - missing root <Project> element.");
-
-            var existingPackageReferences = projectElement
-                .Descendants("PackageReference")
-                .Select(pr => pr.Attribute("Include")?.Value)
-                .Where(val => !string.IsNullOrEmpty(val))
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            var projectDirectory = Path.GetDirectoryName(projectFilePath);
-            if (string.IsNullOrEmpty(projectDirectory))
-            {
-                throw new Exception($"Cannot determine directory for {projectFilePath}");
-            }
-
-            foreach (var package in RequiredPackages)
-            {
-                if (!existingPackageReferences.Contains(package))
-                {
-                    Console.WriteLine($"Package missing: {package}. Attempting to install...");
-                    try
-                    {
-                        var result = RunShellCommand("dotnet", $"add package \"{package}\"", projectDirectory);
-                        if (result.exitCode != 0)
-                        {
-                            Console.WriteLine($"Error installing package {package}: {result.output}");
-                            errors.Add($"{package} - {result.output}");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Successfully installed package: {package}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Failed to install package {package}: {ex.Message}");
-                        errors.Add($"{package} - {ex.Message}");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine($"Package already referenced: {package}");
-                }
-            }
-        }
+        
 
         private void CreateReadOnlyDbContextIfMissing(string projectDir, string nameSpace)
         {
@@ -329,39 +244,6 @@ namespace {nameSpace}
             }
         }
 
-        /// <summary>
-        /// Utility: runs a shell command synchronously, returns stdout/stderr and exit code.
-        /// </summary>
-        private (int exitCode, string output) RunShellCommand(string command, string arguments, string workingDirectory)
-        {
-            var processStartInfo = new ProcessStartInfo
-            {
-                FileName = command,
-                Arguments = arguments,
-                WorkingDirectory = workingDirectory,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-
-            using (var process = new Process { StartInfo = processStartInfo })
-            {
-                process.Start();
-                string stdout = process.StandardOutput.ReadToEnd();
-                string stderr = process.StandardError.ReadToEnd();
-                process.WaitForExit();
-                var exitCode = process.ExitCode;
-
-                // Combine stdout + stderr for convenience
-                string combinedOutput = stdout;
-                if (!string.IsNullOrWhiteSpace(stderr))
-                {
-                    combinedOutput += Environment.NewLine + stderr;
-                }
-
-                return (exitCode, combinedOutput);
-            }
-        }
+        
     }
 }

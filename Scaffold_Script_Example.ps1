@@ -36,7 +36,7 @@ MagicEF --scaffoldProtocol `
     --concretePath $concreteDirectory `
     --modelPath $modelsDirectory `
     --extensionPath $extensionsDirectory `
-    --metaDataPath $metaDataDirectory `
+    --metadataPath $metaDataDirectory `
     --interfacesPath $interfacesDirectory `
     --projectFilePath ".\$projectFileName" `
     --verbose

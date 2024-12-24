@@ -17,7 +17,7 @@ namespace MagicEf.Scaffold.CommandActions
             string? concretePath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--concretePath"));
             string? modelPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--modelPath"));
             string? extensionPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--extensionPath"));
-            string? metaDataPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--metaDataPath"));
+            string? metaDataPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--metadataPath"));
             string? interfacesPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--interfacesPath"));
             // string dbHelpersPath = ArgumentHelper.GetArgumentValue(args, "--dbHelpersPath");
             string? projectFilePath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--projectFilePath"));
@@ -52,9 +52,6 @@ namespace MagicEf.Scaffold.CommandActions
                 return;
             }
 
-            // Call CreateHelpers (empty method for now)
-           // CreateHelpers(dbHelpersPath);
-
             // Process each .cs file in the model path
             var modelFiles = Directory.GetFiles(modelPath, "*.cs");
             foreach (var modelFile in modelFiles)
@@ -71,10 +68,6 @@ namespace MagicEf.Scaffold.CommandActions
             }
         }
 
-        private void CreateHelpers(string dbHelpersPath)
-        {
-            // Empty method for now
-        }
 
         private void ProcessModelFile(string modelFilePath, string projectNamespaceName, string interfacesPath, string metaDataPath, string extensionPath, string concretePath)
         {
@@ -143,24 +136,24 @@ namespace MagicEf.Scaffold.CommandActions
 
         private void CreateMetaDataClass(string modelClassName, string projectNamespaceName, string metaDataPath)
         {
-            string metaDataClassName = $"{modelClassName}MetaData";
+            string metaDataClassName = $"{modelClassName}Metadata";
             string metaDataFilePath = Path.Combine(metaDataPath, $"{metaDataClassName}.cs");
 
             if (File.Exists(metaDataFilePath))
             {
-                Console.WriteLine($"MetaData class {metaDataClassName} already exists.");
+                Console.WriteLine($"Metadata class {metaDataClassName} already exists.");
                 return;
             }
 
             string content = $@"namespace {projectNamespaceName}
 {{
-    public class {metaDataClassName}
+    public partial class {metaDataClassName}
     {{
     }}
 }}";
 
             File.WriteAllText(metaDataFilePath, content);
-            Console.WriteLine($"Created MetaData class: {metaDataFilePath}");
+            Console.WriteLine($"Created Metadata class: {metaDataFilePath}");
         }
 
         private void CreateExtensionClass(string modelClassName, string projectNamespaceName, string extensionPath)
@@ -174,7 +167,7 @@ namespace MagicEf.Scaffold.CommandActions
                 return;
             }
 
-            string metaDataClassName = $"{modelClassName}MetaData";
+            string metaDataClassName = $"{modelClassName}Metadata";
 
             string content = $@"using System.ComponentModel.DataAnnotations;
 
