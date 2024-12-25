@@ -11,7 +11,9 @@ Yes there's more! Much more to the Magic EF protocol. Please reference the Wiki 
 [Magic EF Wiki](https://github.com/magiccodingman/MagicEF.Scaffolding/wiki)
 
 Additional features not discussed in the read me is:
+
 1.) Pipeline Migration Runner Protocol
+
 2.) View DTO Scaffolding Protocol
 
 The Read Me here mostly goes over the primary Magic EF protocol.
