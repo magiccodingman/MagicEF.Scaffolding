@@ -3,7 +3,10 @@
 Magic EF Scaffolding is a revolutionary project designed to make database-first Entity Framework (EF) the powerhouse it was always meant to be. Say goodbye to the perceived downsides of database-first and embrace automation and ease that will make you wonder why anyone would ever choose code-first! If you've been longing for a truly optimized workflow for database-first development, you're in for a treat.
 
 Read the article on Magic EF to fully digest and understand the capabilities!
+
 [Magic EF Article](https://magiccodingman.com/MagicEf)
+
+- The article honestly does a fantastic job introducing Magic EF and I highly suggest you make that your first read.
 
 ## Wait there's more?
 Yes there's more! Much more to the Magic EF protocol. Please reference the Wiki to see additional arguments and capabilities:
