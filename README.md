@@ -434,3 +434,6 @@ Magic EF Scaffolding revolutionizes database-first workflows by automating tedio
 I made this project quite some time ago, but wanted to rebuild it into a significantly more production worthy state. And this need was extreme for me when I needed proper environmental pipeline scaffolding. The OnModelCreating that's generated when scaffolding isn't technically required, but it is so helpful for performance! The ability to generate it in a pipeline process so that it meets any environment was critical for me. And I hope you see how crticial it can become for you. I cannot code without this setup anymore. This has become my new standard, protocal, and my desire for working with literally any database.
 
 I will never use code first again personally. Who knows though, did I convince you too?!
+
+# Experimental Features
+There are experimental features shown in the GitHub wiki. There's no documentation on full implementation yet as I am still working out the kinks as I utilize it for my own project. Experimental features includes auto front end DTO scaffolding and the code first migration protocol. These will see full documentation as I gain confidence utilizing the features.
