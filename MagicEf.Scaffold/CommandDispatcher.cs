@@ -66,6 +66,11 @@ namespace MagicEf.Scaffold
                     shareScaffoldProtocolHandler.Handle(args);
                     break;
 
+                case "--migrationRunner":
+                    var migrationRunnerHandler = new MigrationRunnerHandler();
+                    migrationRunnerHandler.Handle(args);
+                    break;
+
                 default:
                     Console.WriteLine("Unknown command. Use --help for usage information.");
                     break;
