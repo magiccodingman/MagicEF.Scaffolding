@@ -423,6 +423,277 @@ In this example:
 2. **Avoid Overusing LazyLoad**
    Use `LazyLoad` sparingly for single-entity relationships. For collections, pre-loading is preferable to avoid multiple database calls.
 
+
+---
+
+# **Magic EF: Share Scaffold Protocol**
+## **Overview**
+The **Magic EF Share Scaffold Protocol** is an advanced, automated scaffolding system designed to generate a reusable **Shared Library** alongside your primary database scaffolded class library. It creates **read-only interfaces, DTO models, mapping profiles, and extension files** that simplify working with database entities across multiple projects.
+
+This protocol is particularly powerful when used with **Blazor**, where strict typing and reusable DTO models are highly beneficial. However, it is still a **valuable tool in any .NET environment** that requires reusable, structured, and automatically maintained entity models.
+
+### **Key Features**
+- **Auto-generates Read-Only Models & Interfaces**
+- **Creates DTO Models with Mapping Profiles**
+- **Supports Shared Extensions & Metadata**
+- **Works alongside Magic EF Scaffolding**
+- **Minimal Maintenance, Highly Extensible**
+- **Blazor-Friendly & Reusable in APIs or Frontend Apps**
+- **Automatically Updates When Database Schema Changes**
+
+---
+
+## **1. Experimental Status**
+### **Why is this Experimental?**
+Unlike the main **Magic EF Scaffolding Protocol**, which has been refined over years of development, the **Share Scaffold Protocol** is still evolving. While actively used in production by the creator, protocol changes could require refactoring in your codebase.
+
+- 🟢 **The Share Scaffold Protocol is expected to exit experimental status in 2025**  
+- 🟡 **The Migration Runner remains experimental for now**  
+- 🔴 **Future protocol changes may require refactoring**
+
+Developers using this feature should **carefully review** scaffolded changes before integrating them into their projects.
+
+---
+
+## **2. Initial Setup**
+Before running the **Share Scaffold Protocol**, you must first set up a **new Shared Library** in your solution.
+
+### **2.1 Create the Share Project**
+- This should be a **C# Class Library Project** with the **same .NET version** as your database scaffolded class library.
+- This project should **not contain additional dependencies** aside from those added by the scaffolding process.
+- Naming suggestion:  
+  - If your database project is called `PrimaryDb`, name your shared library `PrimaryDb.Share`.
+
+Example:
+```
+Solution/
+├── PrimaryDb/                # Your database scaffolded class library
+│   ├── PrimaryDb.csproj
+├── PrimaryDb.Share/          # Your shared library project
+│   ├── PrimaryDb.Share.csproj
+```
+
+### **2.2 Install Required Dependencies**
+In the **database scaffolded class library**, install **AutoMapper**:
+
+```shell
+dotnet add package AutoMapper
+```
+
+If using **NetTopologySuite** in your database library, install it in the **Shared Library** as well:
+
+```shell
+dotnet add package Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite
+```
+
+---
+
+## **3. Setup the Share Scaffold Protocol**
+### **3.1 Automated Setup (Recommended)**
+The recommended approach is to use the provided PowerShell script:  
+📄 **`Scaffold_Script_Example.ps1`** (located in the Magic EF repository)
+
+### **3.2 Enabling the Share Protocol in the Script**
+1. Open the script and locate:
+   ```ps1
+   # Define Share namespace (default set to ":" to indicate disabled state)
+   $shareNamespace = ":"
+   ```
+2. Change `:` to your **Shared Library Name** (e.g., `"PrimaryDb.Share"`).
+
+   Example:
+   ```ps1
+   $shareNamespace = "PrimaryDb.Share"
+   ```
+3. Running the script now **automatically executes**:
+   ```shell
+   MagicEF --initialShareSetupHandler --shareProjectFilePath "$shareProjectFilePath" --dbProjectFilePath ".\$projectFileName"
+   MagicEF --shareScaffoldProtocolHandler --shareNamespace "$shareNamespace" --other-required-flags
+   ```
+
+4. **DO NOT** add the Share Scaffold Protocol to your CI/CD pipelines.  
+   - This should only be **manually run** during **development**.
+   - Always **review generated files** before committing.
+
+---
+
+## **4. Important Notes**
+### **4.1 Using NetTopologySuite**
+If your database models include **Geometry** types:
+- Add `using NetTopologySuite.Geometries;` to:
+  - **ReadOnly Models** (`{ModelName}ReadOnly.cs`)
+  - **ReadOnly Interfaces** (`I{ModelName}ReadOnly.cs`)
+- These `using` statements are preserved on future scaffolds.
+
+---
+
+## **5. Folder & File Structure**
+After running the **Share Scaffold Protocol**, the following folders and files are created automatically:
+
+### **5.1 ReadOnly Models & Interfaces**
+- **DO NOT modify ReadOnly Models manually.**  
+- Use **ViewDTO Models** for customization.
+
+```
+PrimaryDb.Share/
+├── ReadOnlyInterfaces/
+│   ├── I{ModelName}ReadOnly.cs
+├── ReadOnlyModels/
+│   ├── {ModelName}ReadOnly.cs
+```
+
+---
+
+### **5.2 ViewDTO Models**
+- These are **safe to modify**.
+- You should **work only within these classes**.
+
+```
+PrimaryDb.Share/
+├── ViewDtoModels/
+│   ├── {ModelName}ViewDTO.cs
+```
+
+Example:
+```csharp
+[MetadataType(typeof(GeoLocationMetadata))]
+public partial class GeoLocationViewDTO : GeoLocationReadOnly, IGeoLocation
+{
+   // make modifications here or write explicit ignore code
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [JsonIgnore]
+    Geometry IGeoLocationReadOnly.Location { get => ExplicitlyIgnore.Get<Geometry>(); set => ExplicitlyIgnore.Set(value); }
+}
+```
+
+if you want my personal ExplicitlyIgnore code I created for my personal use, you can just steal it here:
+```csharp
+    public static class ExplicitlyIgnore
+    {
+#pragma warning disable CS8603 // Suppresses "Possible null reference return"
+        /// <summary>
+        /// Returns the default value for a property meant to be ignored.
+        /// </summary>
+        public static T Get<T>() => default;
+#pragma warning restore CS8603 // Re-enables the warning after this point
+
+        /// <summary>
+        /// Logs a debug message when attempting to set an ignored property.
+        /// </summary>
+        public static void Set<T>(T _)
+        {
+#if DEBUG
+            try
+            {
+                string className = typeof(T).Name;
+                Console.WriteLine($"DTO disabled serializing: {className}");
+            }
+            catch
+            {
+                Console.WriteLine($"DTO disabled serializing");
+            }
+#endif
+        }
+    }
+```
+
+---
+
+### **5.3 Shared Metadata & Extensions**
+Metadata and extensions allow shared logic across models.
+
+```
+PrimaryDb.Share/
+├── SharedMetaData/
+│   ├── {ModelName}SharedMetadata.cs
+├── SharedExtensions/
+│   ├── {ModelName}SharedExtensions.cs
+```
+
+Example:
+```csharp
+public static class GeoLocationSharedExtension
+{
+    public static string GetFormattedLocation(this IGeoLocationReadOnly location)
+    {
+        return location?.Location?.ToString() ?? "N/A";
+    }
+}
+```
+
+---
+
+## **6. Auto-Generated Mapping Profiles**
+The **Magic EF Share Scaffold Protocol** generates **AutoMapper Profiles** inside the **database scaffolded class library**.
+
+```
+PrimaryDb/
+├── MappingProfiles/
+│   ├── {ModelName}ToDtoProfile.cs
+│   ├── DtoTo{ModelName}Profile.cs
+```
+
+Example:
+```csharp
+public class GeoLocationToDtoProfile : Profile
+{
+    public GeoLocationToDtoProfile()
+    {
+        // Use interface-first mapping by default for IGeoLocationReadOnly
+        CreateMap<IGeoLocationReadOnly, IGeoLocationReadOnly>()
+            .IncludeAllDerived(); // Automates mapping for shared interface properties
+
+        // Specific mapping for custom logic can be added here:
+        //CreateMap<GeoLocationReadOnly, GeoLocationViewDTO>()
+        //    .IncludeBase<IGeoLocationReadOnly, IGeoLocationReadOnly>()
+        //    .ForMember(dest => dest.YourField, opt => opt.MapFrom(src => "Custom Value"));
+    }
+}
+
+public class DtoToGeoLocationProfile : Profile
+{
+    public DtoToGeoLocationProfile()
+    {
+        // Use interface-first mapping by default for IGeoLocationReadOnly
+        CreateMap<IGeoLocationReadOnly, IGeoLocationReadOnly>()
+            .IncludeAllDerived(); // Automates mapping for shared interface properties
+
+        // Specific mapping for DTO -> model logic can be added here:
+        //CreateMap<GeoLocationViewDTO, GeoLocationReadOnly>()
+        //    .IncludeBase<I{originalName}ReadOnly, I{originalName}ReadOnly>()
+        //    .ForMember(dest => dest.YourField, opt => opt.MapFrom(src => "Something"));
+    }
+}
+```
+
+---
+
+## **7. Removing or Disabling Share Scaffold Protocol**
+To disable the **Share Scaffold Protocol**, revert:
+```ps1
+$shareNamespace = ":"
+```
+Or remove just the following if you don't want to have the shared extension interface and/or metadata share:
+```shell
+MagicEF --shareScaffoldProtocolHandler --dbMetadataPath --dbExtensionsPath
+```
+
+---
+
+## **8. Summary**
+The **Magic EF Share Scaffold Protocol** provides:
+✅ **Automated Read-Only Models & Interfaces**  
+✅ **Safe ViewDTO Models with Extension & Metadata Handling**  
+✅ **Seamless AutoMapper Integration**  
+✅ **Enforced Compilation Errors for Type Mismatches**  
+✅ **Improved Maintainability & Reusability**  
+
+⚠️ **Review Generated Files Before Committing**  
+⚠️ **Do Not Modify ReadOnly Models Directly**  
+⚠️ **Only Run During Development, Not in CI/CD Pipelines**  
+
+With these structured automation tools, **best practices become effortless**. 🚀
+
 ---
 
 
@@ -435,5 +706,4 @@ I made this project quite some time ago, but wanted to rebuild it into a signifi
 
 I will never use code first again personally. Who knows though, did I convince you too?!
 
-# Experimental Features
-There are experimental features shown in the GitHub wiki. There's no documentation on full implementation yet as I am still working out the kinks as I utilize it for my own project. Experimental features includes auto front end DTO scaffolding and the code first migration protocol. These will see full documentation as I gain confidence utilizing the features.
+Here's your **comprehensive documentation** for the **Magic EF Share Scaffold Protocol**, formatted professionally for clarity and usability. This will serve as an addition to your existing Magic EF documentation.
