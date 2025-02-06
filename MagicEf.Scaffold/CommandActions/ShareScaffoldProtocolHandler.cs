@@ -30,7 +30,7 @@ namespace MagicEf.Scaffold.CommandActions
 
             string? dbExtensionsPath = null;
             string? dbextensiondirectory = ArgumentHelper.GetArgumentValue(args, "--dbExtensionsPath");
-            
+
             if (!string.IsNullOrWhiteSpace(dbextensiondirectory))
             {
                 dbExtensionsPath = FileHelper.NormalizePath(dbextensiondirectory);
@@ -74,7 +74,7 @@ namespace MagicEf.Scaffold.CommandActions
             EnsureDirectoryExists(shareViewDtoModelsPath);
             EnsureDirectoryExists(dbMapperPath);
             EnsureDirectoryExists(shareSharedExtensionsPath);
-            EnsureDirectoryExists(shareSharedMetadataPath);            
+            EnsureDirectoryExists(shareSharedMetadataPath);
 
             if (!string.IsNullOrWhiteSpace(dbExtensionsPath))
             {
@@ -261,7 +261,7 @@ namespace MagicEf.Scaffold.CommandActions
                 );
             }
 
-            
+
         }
 
         /// <summary>
@@ -273,61 +273,68 @@ namespace MagicEf.Scaffold.CommandActions
         /// <param name="predefinedUsings">The set of using statements you always want at the top (order matters).</param>
         /// <param name="buildContent">A callback that writes the remainder of the file into the provided StringBuilder.</param>
         private void WriteFilePreservingExtraUsings(
-            string filePath,
-            IEnumerable<string> predefinedUsings,
-            Action<StringBuilder> buildContent)
+    string filePath,
+    IEnumerable<string> predefinedUsings,
+    Action<StringBuilder> buildContent)
         {
-            // Gather any using statements from an existing file.
             var existingUsings = new HashSet<string>(StringComparer.Ordinal);
+
+            // Read the existing file to extract using statements
             if (File.Exists(filePath))
             {
                 var lines = File.ReadAllLines(filePath);
                 foreach (var line in lines)
                 {
                     var trimmed = line.Trim();
-                    // Check for a "using" line. (This simple check assumes each using is on its own line.)
                     if (trimmed.StartsWith("using ") && trimmed.EndsWith(";"))
                     {
                         existingUsings.Add(trimmed);
                     }
-                    else if (!string.IsNullOrWhiteSpace(trimmed))
-                    {
-                        // Once we hit a non-using (non-empty) line, we assume the using block is over.
-                        break;
-                    }
                 }
             }
 
-            // Remove any extra usings that are already in the predefined list.
-            var predefinedSet = new HashSet<string>(predefinedUsings.Select(u => u.Trim()), StringComparer.Ordinal);
-            var additionalUsings = existingUsings.Except(predefinedSet).ToList();
+            // Create the final ordered using list
+            var orderedUsings = new List<string>();
 
-            // Build the final file content.
+            // Add predefined usings in the given order (ensuring no duplicates)
+            foreach (var predefined in predefinedUsings)
+            {
+                if (!existingUsings.Contains(predefined))
+                {
+                    orderedUsings.Add(predefined);
+                }
+            }
+
+            // Add extra usings that were found in the file but not predefined
+            foreach (var extraUsing in existingUsings)
+            {
+                if (!orderedUsings.Contains(extraUsing))
+                {
+                    orderedUsings.Add(extraUsing);
+                }
+            }
+
+            // Start writing the file content
             var sb = new StringBuilder();
 
-            // Write predefined usings (order matters).
-            foreach (var u in predefinedUsings)
+            // Write the ordered using statements
+            foreach (var u in orderedUsings)
             {
                 sb.AppendLine(u);
             }
-            // Then add any additional usings.
-            foreach (var u in additionalUsings)
-            {
-                sb.AppendLine(u);
-            }
-            // Insert a blank line after the using block (if any usings were written).
-            if (predefinedUsings.Any() || additionalUsings.Any())
+
+            // Insert a blank line after the usings (only if we actually wrote any usings)
+            if (orderedUsings.Count > 0)
             {
                 sb.AppendLine();
             }
 
-            // Let the caller add the remainder of the file content.
+            // Call the provided method to build the rest of the file
             buildContent(sb);
 
-            // Write the new file (overwriting any previous version).
+            // Write the final content to file
             File.WriteAllText(filePath, sb.ToString());
         }
-
 
         #region Step 2: Create/Recreate I{originalName}ReadOnly.cs
 
@@ -336,51 +343,49 @@ namespace MagicEf.Scaffold.CommandActions
         /// Always recreated from scratch.
         /// </summary>
         private void CreateOrRefreshReadOnlyInterface(
-            string originalName,
-            string shareNamespace,
-            string shareReadOnlyInterfacesPath,
-            ClassDeclarationSyntax classDeclaration)
+    string originalName,
+    string shareNamespace,
+    string shareReadOnlyInterfacesPath,
+    ClassDeclarationSyntax classDeclaration)
         {
             var interfaceName = $"I{originalName}ReadOnly";
             var fileName = $"{interfaceName}.cs";
             var filePath = Path.Combine(shareReadOnlyInterfacesPath, fileName);
 
-            // 1) Delete if it exists
-            if (File.Exists(filePath))
-            {
-                File.Delete(filePath);
-                Console.WriteLine($"Deleted existing file: {filePath}");
-            }
-
-            // 2) Collect all non-virtual, non-inverse properties from the original class
+            // Collect all non-virtual, non-inverse properties from the original class
             var properties = classDeclaration.Members
                 .OfType<PropertyDeclarationSyntax>()
                 .Where(prop => !IsVirtualOrInverse(prop))
                 .ToList();
 
-            // 3) Build the interface code
-            var sb = new StringBuilder();
-            sb.AppendLine($"namespace {shareNamespace}");
-            sb.AppendLine("{");
-            sb.AppendLine($"    public interface {interfaceName}");
-            sb.AppendLine("    {");
-
-            foreach (var prop in properties)
+            // Define required usings for this file
+            var predefinedUsings = new string[]
             {
-                // Example: `int Id { get; set; }`
-                // We replicate type, name, and accessibility (always public in an interface).
-                var propType = prop.Type.ToString();
-                var propName = prop.Identifier.Text;
-                sb.AppendLine($"        {propType} {propName} {{ get; set; }}");
-            }
+                // Add any necessary usings here if required for all read-only interfaces
+            };
 
-            sb.AppendLine("    }");
-            sb.AppendLine("}");
+            // Write the file while preserving any extra usings
+            WriteFilePreservingExtraUsings(filePath, predefinedUsings, sb =>
+            {
+                sb.AppendLine($"namespace {shareNamespace}");
+                sb.AppendLine("{");
+                sb.AppendLine($"    public interface {interfaceName}");
+                sb.AppendLine("    {");
 
-            // 4) Write to file
-            File.WriteAllText(filePath, sb.ToString());
+                foreach (var prop in properties)
+                {
+                    var propType = prop.Type.ToString();
+                    var propName = prop.Identifier.Text;
+                    sb.AppendLine($"        {propType} {propName} {{ get; set; }}");
+                }
+
+                sb.AppendLine("    }");
+                sb.AppendLine("}");
+            });
+
             Console.WriteLine($"Created/Refreshed read-only interface: {filePath}");
         }
+
 
         /// <summary>
         /// Checks if a property is declared `virtual` or is likely an inverse navigation property.
@@ -420,30 +425,34 @@ namespace MagicEf.Scaffold.CommandActions
         /// This file is never overwritten if it already exists (we skip).
         /// </summary>
         private void CreateInterfaceExtensionIfMissing(
-    string originalName,
-    string shareNamespace,
-    string shareInterfaceExtensionsPath)
+             string originalName,
+             string shareNamespace,
+             string shareInterfaceExtensionsPath)
         {
             var extensionFileName = $"I{originalName}Extension.cs";
             var extensionFilePath = Path.Combine(shareInterfaceExtensionsPath, extensionFileName);
 
-            // Define the predefined usings for this file.
-            // (In this example there are none, but you could add them if needed.)
-            var predefinedUsings = new string[] { };
-
-            // Build (or rebuild) the file, preserving any extra usings.
-            WriteFilePreservingExtraUsings(extensionFilePath, predefinedUsings, sb =>
+            if (File.Exists(extensionFilePath))
             {
-                sb.AppendLine($"namespace {shareNamespace}");
-                sb.AppendLine("{");
-                sb.AppendLine("    // This interface extends the read-only interface and allows future expansions.");
-                sb.AppendLine($"    public partial interface I{originalName} : I{originalName}ReadOnly");
-                sb.AppendLine("    {");
-                sb.AppendLine("        // Add additional non-readonly properties or methods here if needed");
-                sb.AppendLine("    }");
-                sb.AppendLine("}");
-            });
+                Console.WriteLine($"Interface extension already exists: {extensionFilePath} -> Skipping creation");
+                return;
+            }
 
+            // Build a partial interface "I{originalName}" that extends "I{originalName}ReadOnly"
+            var interfaceName = $"I{originalName}";
+            var readOnlyName = $"I{originalName}ReadOnly";
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"namespace {shareNamespace}");
+            sb.AppendLine("{");
+            sb.AppendLine($"    // This interface extends the read-only interface and allows future expansions.");
+            sb.AppendLine($"    public partial interface {interfaceName} : {readOnlyName}");
+            sb.AppendLine("    {");
+            sb.AppendLine("        // Add additional non-readonly properties or methods here if needed");
+            sb.AppendLine("    }");
+            sb.AppendLine("}");
+
+            File.WriteAllText(extensionFilePath, sb.ToString());
             Console.WriteLine($"Created interface extension: {extensionFilePath}");
         }
 
@@ -481,7 +490,7 @@ namespace MagicEf.Scaffold.CommandActions
 
         #endregion
 
-        
+
 
         #region Create Shared {originalName}SharedMetaData.cs if missing
 
