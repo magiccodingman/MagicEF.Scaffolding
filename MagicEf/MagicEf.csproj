@@ -19,7 +19,7 @@
 		<PackageProjectUrl>https://github.com/magiccodingman/MagicEF.Scaffolding</PackageProjectUrl>
 		<Copyright>MIT</Copyright>
 		<RepositoryUrl>https://github.com/magiccodingman/MagicEF.Scaffolding</RepositoryUrl>
-		<Version>1.0.11</Version>
+		<Version>1.0.12</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
