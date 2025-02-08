@@ -228,12 +228,12 @@ namespace {projectNamespaceName}
 
             // Generate validation code for each key in the second GetById method
             var validations = keyProperties.Select(kp =>
-$@"            if (!idDict.TryGetValue(""{kp.Name}"", out object temp{kp.Name}))
+$@"            if (!idDict.TryGetValue(""{kp.Name}"", out object? temp{kp.Name}))
             {{
                 throw new ArgumentException(""id must contain key '{kp.Name}'"");
             }}
 
-            if (!(temp{kp.Name} is {kp.Type}))
+            if (temp{kp.Name} == null || !(temp{kp.Name} is {kp.Type}))
             {{
                 throw new ArgumentException($""id['{kp.Name}'] must be of type {kp.Type}"");
             }}
