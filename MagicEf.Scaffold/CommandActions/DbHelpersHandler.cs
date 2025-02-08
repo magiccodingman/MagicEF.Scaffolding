@@ -198,11 +198,17 @@ namespace {namespaceName}
     public interface IRepository<TEntity> : IReadOnlyRepository<TEntity> where TEntity : class
     {{
         void Add(TEntity entity);
-        void AddRange(IEnumerable<TEntity> entities);
+        Task AddAsync(TEntity entity);
+        void AddRange(IEnumerable<TEntity> entitys);
+        Task AddRangeAsync(IEnumerable<TEntity> entitys);
         void Update(TEntity entity);
-        void UpdateRange(IEnumerable<TEntity> entities);
+        Task UpdateAsync(TEntity entity);
+        void UpdateRange(IEnumerable<TEntity> entitys);
+        Task UpdateRangeAsync(IEnumerable<TEntity> entitys);
         void Delete(TEntity entity);
-        void DeleteRange(IEnumerable<TEntity> entities);
+        Task DeleteAsync(TEntity entity);
+        void DeleteRange(IEnumerable<TEntity> entitys);
+        Task DeleteRangeAsync(IEnumerable<TEntity> entitys);
     }}
 }}";
 
@@ -364,6 +370,20 @@ namespace {namespaceName}
             }}
         }}
 
+        public virtual async Task AddAsync(TEntity entity)
+        {{
+            try
+            {{
+                await _dbContext.Set<TEntity>().AddAsync(entity);
+                await _dbContext.SaveChangesAsync();
+            }}
+            catch (DbEntityValidationException e)
+            {{
+                LogDbErrors(e);
+                throw;
+            }}
+        }}
+
         public virtual void AddRange(IEnumerable<TEntity> entities)
         {{
             try
@@ -372,6 +392,20 @@ namespace {namespaceName}
                 _dbContext.SaveChanges();
             }}
             catch (DbUpdateException e)
+            {{
+                LogDbErrors(e);
+                throw;
+            }}
+        }}
+
+        public virtual async Task AddRangeAsync(IEnumerable<TEntity> entitys)
+        {{
+            try
+            {{
+                await _dbContext.Set<TEntity>().AddRangeAsync(entitys);
+                await _dbContext.SaveChangesAsync();
+            }}
+            catch (DbEntityValidationException e)
             {{
                 LogDbErrors(e);
                 throw;
@@ -390,6 +424,24 @@ namespace {namespaceName}
                 _dbContext.SaveChanges();
             }}
             catch (DbUpdateException e)
+            {{
+                LogDbErrors(e);
+                throw;
+            }}
+        }}
+
+        public virtual async Task UpdateAsync(TEntity entity)
+        {{
+            try
+            {{
+                if (_dbContext.Entry(entity).State == EntityState.Detached)
+                {{
+                    _dbContext.Set<TEntity>().Attach(entity);
+                }}
+                _dbContext.Entry(entity).State = EntityState.Modified;
+                await _dbContext.SaveChangesAsync();
+            }}
+            catch (DbEntityValidationException e)
             {{
                 LogDbErrors(e);
                 throw;
@@ -417,6 +469,27 @@ namespace {namespaceName}
             }}
         }}
 
+        public virtual async Task UpdateRangeAsync(IEnumerable<TEntity> entities)
+        {{
+            try
+            {{
+                foreach (TEntity entity in entities)
+                {{
+                    if (_dbContext.Entry(entity).State == EntityState.Detached)
+                    {{
+                        _dbContext.Set<TEntity>().Attach(entity);
+                    }}
+                    _dbContext.Entry(entity).State = EntityState.Modified;
+                }}
+                await _dbContext.SaveChangesAsync();
+            }}
+            catch (DbEntityValidationException e)
+            {{
+                LogDbErrors(e);
+                throw;
+            }}
+        }}
+
         public virtual void Delete(TEntity entity)
         {{
             try
@@ -431,6 +504,20 @@ namespace {namespaceName}
             }}
         }}
 
+        public virtual async Task DeleteAsync(TEntity entity)
+        {{
+            try
+            {{
+                _dbContext.Set<TEntity>().Remove(entity);
+                await _dbContext.SaveChangesAsync();
+            }}
+            catch (DbEntityValidationException e)
+            {{
+                LogDbErrors(e);
+                throw;
+            }}
+        }}
+
         public virtual void DeleteRange(IEnumerable<TEntity> entities)
         {{
             try
@@ -439,6 +526,20 @@ namespace {namespaceName}
                 _dbContext.SaveChanges();
             }}
             catch (DbUpdateException e)
+            {{
+                LogDbErrors(e);
+                throw;
+            }}
+        }}
+
+        public virtual async Task DeleteRangeAsync(IEnumerable<TEntity> entities)
+        {{
+            try
+            {{
+                _dbContext.Set<TEntity>().RemoveRange(entities);
+                await _dbContext.SaveChangesAsync();
+            }}
+            catch (DbEntityValidationException e)
             {{
                 LogDbErrors(e);
                 throw;
