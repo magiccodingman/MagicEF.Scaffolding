@@ -264,7 +264,7 @@ $@"            if (!idDict.TryGetValue(""{kp.Name}"", out object temp{kp.Name}))
 {validationCode}
 
             // Fetch the record from the database
-            return _dbSet.FirstOrDefault(c => {whereClause});
+            return _dbSet.FirstOrDefault(c => {whereClause}) ?? throw new Exception(""Provided Id for '{modelClassName}' did not exist"");
         }}";
 
             return methodCode;
