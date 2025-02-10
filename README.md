@@ -456,7 +456,7 @@ Developers using this feature should **carefully review** scaffolded changes bef
 ---
 
 ## **2. Initial Setup**
-Before running the **Share Scaffold Protocol**, you must first set up a **new Shared Library** in your solution.
+Before running the **Share Scaffold Protocol**, you must first set up a **new Shared Library** in your solution. Then I suggest you also make your original database scaffolded project reference your new shared project, but not vice versa!
 
 ### **2.1 Create the Share Project**
 - This should be a **C# Class Library Project** with the **same .NET version** as your database scaffolded class library.
