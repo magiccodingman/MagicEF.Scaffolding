@@ -640,12 +640,12 @@ public class GeoLocationToDtoProfile : Profile
     public GeoLocationToDtoProfile()
     {
         // Use interface-first mapping by default for IGeoLocationReadOnly
-        CreateMap<IGeoLocationReadOnly, IGeoLocationReadOnly>()
+        CreateMap<GeoLocation, GeoLocationViewDTO>()
             .IncludeAllDerived(); // Automates mapping for shared interface properties
 
         // Specific mapping for custom logic can be added here:
-        //CreateMap<GeoLocationReadOnly, GeoLocationViewDTO>()
-        //    .IncludeBase<IGeoLocationReadOnly, IGeoLocationReadOnly>()
+        //CreateMap<GeoLocation, GeoLocationViewDTO>()
+        //    .IncludeBase<GeoLocation, GeoLocationViewDTO>()
         //    .ForMember(dest => dest.YourField, opt => opt.MapFrom(src => "Custom Value"));
     }
 }
@@ -654,13 +654,12 @@ public class DtoToGeoLocationProfile : Profile
 {
     public DtoToGeoLocationProfile()
     {
-        // Use interface-first mapping by default for IGeoLocationReadOnly
-        CreateMap<IGeoLocationReadOnly, IGeoLocationReadOnly>()
+        CreateMap<GeoLocationViewDTO, GeoLocation>()
             .IncludeAllDerived(); // Automates mapping for shared interface properties
 
         // Specific mapping for DTO -> model logic can be added here:
-        //CreateMap<GeoLocationViewDTO, GeoLocationReadOnly>()
-        //    .IncludeBase<I{originalName}ReadOnly, I{originalName}ReadOnly>()
+        //CreateMap<GeoLocationViewDTO, GeoLocation>()
+        //    .IncludeBase<GeoLocationViewDTO, GeoLocation>()
         //    .ForMember(dest => dest.YourField, opt => opt.MapFrom(src => "Something"));
     }
 }
