@@ -12,6 +12,7 @@ namespace MagicEf.Scaffold.CommandActions
 {
     public class ShareScaffoldProtocolHandler : CommandHandlerBase
     {
+        private readonly string MagicReadOnlyName = "MagicReadOnly";
         public override void Handle(string[] args)
         {
             // Parse required arguments
@@ -112,6 +113,16 @@ namespace MagicEf.Scaffold.CommandActions
                 })
                 .ToList();
             Console.WriteLine("Filtering successful");
+
+            string projectDirectoryPath = GetNamespaceDirectory(shareReadOnlyInterfacesPath, shareNamespace);
+            var magicReadOnlyPath = Path.Combine(projectDirectoryPath, MagicReadOnlyName);
+
+           /* Console.WriteLine($"magic path: {magicReadOnlyPath}");
+            return;*/
+            Directory.CreateDirectory(magicReadOnlyPath);
+
+            CreateMagiViewDtoAttribute(shareNamespace, magicReadOnlyPath);
+
             // Process each filtered model file
             foreach (var modelFile in filteredFiles)
             {
@@ -131,6 +142,66 @@ namespace MagicEf.Scaffold.CommandActions
                     shareSharedMetadataPath
                 );
             }
+        }
+
+        private string GetNamespaceDirectory(string fullPath, string namespaceName)
+        {
+            if (string.IsNullOrWhiteSpace(fullPath))
+                throw new ArgumentException("Full path cannot be null or empty.", nameof(fullPath));
+
+            if (string.IsNullOrWhiteSpace(namespaceName))
+                throw new ArgumentException("Namespace name cannot be null or empty.", nameof(namespaceName));
+
+            var currentDirectory = new DirectoryInfo(fullPath);
+
+            while (currentDirectory != null)
+            {
+                if (currentDirectory.Name.Equals(namespaceName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return currentDirectory.FullName;
+                }
+
+                currentDirectory = currentDirectory.Parent;
+            }
+
+            throw new DirectoryNotFoundException($"The namespace '{namespaceName}' was expected to match a folder name, but was not found in the provided path '{fullPath}'.");
+        }
+
+        /// <summary>
+        /// Generates an public interface that matches the original class minus any virtual/inverse properties.
+        /// Always recreated from scratch.
+        /// </summary>
+        private void CreateMagiViewDtoAttribute(
+    string shareNamespace,
+    string magicReadOnlyPath)
+        {
+            var fileName = $"MagicViewDtoAttributeReadOnly.cs";
+            var filePath = Path.Combine(magicReadOnlyPath, fileName);
+            // Define required usings for this file
+            var predefinedUsings = new string[]
+            {
+                // Add any necessary usings here if required for all read-only interfaces
+            };
+
+            // Write the file while preserving any extra usings
+            WriteFilePreservingExtraUsings(filePath, predefinedUsings, sb =>
+            {
+                sb.AppendLine($"namespace {shareNamespace}");
+                sb.AppendLine("{");
+                sb.AppendLine("    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]");
+                sb.AppendLine("    public sealed class MagicViewDtoAttribute : Attribute");
+                sb.AppendLine("    {");
+                sb.AppendLine("        public string ProjectName { get; }");
+                sb.AppendLine("");
+                sb.AppendLine($"        public MagicViewDtoAttribute(string projectName = \"{shareNamespace}\")");
+                sb.AppendLine("        {");
+                sb.AppendLine("            ProjectName = projectName;");
+                sb.AppendLine("        }");
+                sb.AppendLine("    }");
+                sb.AppendLine("}");
+            });
+
+            Console.WriteLine($"Created/Refreshed read-only interface: {fileName}");
         }
 
         private void EnsureDirectoryExists(string path)
@@ -640,6 +711,7 @@ namespace MagicEf.Scaffold.CommandActions
             sb.AppendLine("{");
             //sb.AppendLine("    // Mark with [Preserve] to keep it from being stripped in AOT scenarios");
             //sb.AppendLine("    [Preserve]");
+            sb.AppendLine($"    [MagicViewDto]");
             sb.AppendLine($"    [MetadataType(typeof({metaDataName}))]");
             sb.AppendLine($"    public partial class {originalName}ViewDTO : {originalName}ReadOnly, {interfaceName}");
             sb.AppendLine("    {");
@@ -669,39 +741,43 @@ namespace MagicEf.Scaffold.CommandActions
                 Console.WriteLine($"Mapper profile already exists: {filePath} -> Skipping creation");
                 return;
             }
-
+            string viewDtoName = $"{originalName}ViewDTO";
             var sb = new StringBuilder();
             sb.AppendLine("using AutoMapper;");
             sb.AppendLine($"using {shareNamespace};");
             sb.AppendLine();
             sb.AppendLine($"namespace {dbNamespace}");
             sb.AppendLine("{");
+            sb.AppendLine($"    /// <summary>");
+            sb.AppendLine($"    /// Convert the backend model '{originalName}' to the frontend {viewDtoName}");
+            sb.AppendLine($"    /// </summary>");
             sb.AppendLine($"    public class {originalName}ToDtoProfile : Profile");
             sb.AppendLine("    {");
             sb.AppendLine($"        public {originalName}ToDtoProfile()");
             sb.AppendLine("        {");
-            sb.AppendLine($"            // Use interface-first mapping by default for I{originalName}ReadOnly");
-            sb.AppendLine($"            CreateMap<{originalName}, {originalName}ViewDTO>()");
+            sb.AppendLine($"            CreateMap<{originalName}, {viewDtoName}>()");
             sb.AppendLine("                .IncludeAllDerived(); // Automates mapping for shared interface properties");
             sb.AppendLine();
             sb.AppendLine("            // Specific mapping for custom logic can be added here:");
-            sb.AppendLine($"            //CreateMap<{originalName}, {originalName}ViewDTO>()");
-            sb.AppendLine($"            //    .IncludeBase<{originalName}, {originalName}ViewDTO>()");
+            sb.AppendLine($"            //CreateMap<{originalName}, {viewDtoName}>()");
+            sb.AppendLine($"            //    .IncludeBase<{originalName}, {viewDtoName}>()");
             sb.AppendLine("            //    .ForMember(dest => dest.YourField, opt => opt.MapFrom(src => \"Custom Value\"));");
             sb.AppendLine("        }");
             sb.AppendLine("    }");
             sb.AppendLine();
+            sb.AppendLine($"    /// <summary>");
+            sb.AppendLine($"    /// Convert the frontend model '{viewDtoName}' to the backend {originalName}");
+            sb.AppendLine($"    /// </summary>");
             sb.AppendLine($"    public class DtoTo{originalName}Profile : Profile");
             sb.AppendLine("    {");
             sb.AppendLine($"        public DtoTo{originalName}Profile()");
             sb.AppendLine("        {");
-            sb.AppendLine($"            // Use interface-first mapping by default for I{originalName}ReadOnly");
             sb.AppendLine($"            CreateMap<{originalName}ViewDTO, {originalName}>()");
             sb.AppendLine("                .IncludeAllDerived(); // Automates mapping for shared interface properties");
             sb.AppendLine();
             sb.AppendLine("            // Specific mapping for DTO -> model logic can be added here:");
-            sb.AppendLine($"            //CreateMap<{originalName}ViewDTO, {originalName}>()");
-            sb.AppendLine($"            //    .IncludeBase<{originalName}ViewDTO, {originalName}>()");
+            sb.AppendLine($"            //CreateMap<{viewDtoName}, {originalName}>()");
+            sb.AppendLine($"            //    .IncludeBase<{viewDtoName}, {originalName}>()");
             sb.AppendLine("            //    .ForMember(dest => dest.YourField, opt => opt.MapFrom(src => \"Something\"));");
             sb.AppendLine("        }");
             sb.AppendLine("    }");
