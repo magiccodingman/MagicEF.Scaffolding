@@ -122,6 +122,8 @@ namespace MagicEf.Scaffold.CommandActions
             Directory.CreateDirectory(magicReadOnlyPath);
 
             CreateMagiViewDtoAttribute(shareNamespace, magicReadOnlyPath);
+            CreateMagicFlattenRemoveAttribute(shareNamespace, magicReadOnlyPath);
+            CreateMagicFlattenInterfaceRemoveAttribute(shareNamespace, magicReadOnlyPath);
 
             // Process each filtered model file
             foreach (var modelFile in filteredFiles)
@@ -191,12 +193,73 @@ namespace MagicEf.Scaffold.CommandActions
                 sb.AppendLine("    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]");
                 sb.AppendLine("    public sealed class MagicViewDtoAttribute : Attribute");
                 sb.AppendLine("    {");
-                sb.AppendLine("        public string ProjectName { get; }");
+                sb.AppendLine($"        public string ProjectName {{ get => \"{shareNamespace}\"; }}");
+                sb.AppendLine("        public string? CustomViewDtoName { get; }");
+                sb.AppendLine("        public bool IgnoreWhenFlattening { get; }");
                 sb.AppendLine("");
-                sb.AppendLine($"        public MagicViewDtoAttribute(string projectName = \"{shareNamespace}\")");
+                sb.AppendLine($"        public MagicViewDtoAttribute(bool ignoreWhenFlattening = false)");
                 sb.AppendLine("        {");
-                sb.AppendLine("            ProjectName = projectName;");
+                sb.AppendLine("            IgnoreWhenFlattening = ignoreWhenFlattening;");
                 sb.AppendLine("        }");
+                sb.AppendLine($"        public MagicViewDtoAttribute(string customViewDtoName)");
+                sb.AppendLine("        {");
+                sb.AppendLine("            IgnoreWhenFlattening = ignoreWhenFlattening;");
+                sb.AppendLine("        }");
+                sb.AppendLine("    }");
+                sb.AppendLine("}");
+            });
+
+            Console.WriteLine($"Created/Refreshed read-only interface: {fileName}");
+        }
+
+
+        private void CreateMagicFlattenRemoveAttribute(
+    string shareNamespace,
+    string magicReadOnlyPath)
+        {
+            var fileName = $"MagicFlattenRemoveReadOnly.cs";
+            var filePath = Path.Combine(magicReadOnlyPath, fileName);
+            // Define required usings for this file
+            var predefinedUsings = new string[]
+            {
+                // Add any necessary usings here if required for all read-only interfaces
+            };
+
+            // Write the file while preserving any extra usings
+            WriteFilePreservingExtraUsings(filePath, predefinedUsings, sb =>
+            {
+                sb.AppendLine($"namespace {shareNamespace}");
+                sb.AppendLine("{");
+                sb.AppendLine("    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]");
+                sb.AppendLine("    public sealed class MagicFlattenRemoveAttribute : Attribute");
+                sb.AppendLine("    {");
+                sb.AppendLine("    }");
+                sb.AppendLine("}");
+            });
+
+            Console.WriteLine($"Created/Refreshed read-only interface: {fileName}");
+        }
+
+        private void CreateMagicFlattenInterfaceRemoveAttribute(
+    string shareNamespace,
+    string magicReadOnlyPath)
+        {
+            var fileName = $"MagicFlattenInterfaceRemoveReadOnly.cs";
+            var filePath = Path.Combine(magicReadOnlyPath, fileName);
+            // Define required usings for this file
+            var predefinedUsings = new string[]
+            {
+                // Add any necessary usings here if required for all read-only interfaces
+            };
+
+            // Write the file while preserving any extra usings
+            WriteFilePreservingExtraUsings(filePath, predefinedUsings, sb =>
+            {
+                sb.AppendLine($"namespace {shareNamespace}");
+                sb.AppendLine("{");
+                sb.AppendLine("    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]");
+                sb.AppendLine("    public sealed class MagicFlattenInterfaceRemoveAttribute : Attribute");
+                sb.AppendLine("    {");
                 sb.AppendLine("    }");
                 sb.AppendLine("}");
             });
