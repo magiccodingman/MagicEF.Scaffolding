@@ -15,6 +15,7 @@ $metaDataDirectory = ".\MetaDataClasses"     # Directory for metadata classes (d
 $interfacesDirectory = ".\Interfaces"        # Directory for interfaces (default: .\Interfaces)
 $concreteDirectory = ".\Concrete"            # Directory for concrete classes (default: .\Concrete)
 $mappingDirectory = ".\MappingProfiles"            # Directory for mapping profile classes (default: .\MappingProfiles)
+$separateOutputVirtualDirectory = "" # (optional) Can specify separated virtual file directory. eg, ".\SeparatedVdFiles"
 
 # ---------------------------------------------------------------
 # Share Library Variables (Optional)
@@ -68,7 +69,7 @@ MagicEF --scaffoldProtocol `
 
 MagicEF --ambiguousIndex --directoryPath $modelsDirectory
 MagicEF --removeOnConfiguring --filePath ".\ReadOnlyDbContext.cs"
-MagicEF --separateVirtualProperties --directoryPath $modelsDirectory
+MagicEF --separateVirtualProperties --directoryPath $modelsDirectory --outputPath $separateOutputVirtualDirectory
 MagicEF --dbHelpers $dbHelpersDirectory --customContextFilePath ".\$dbContextFile.cs"
 
 # ================= SHARE LIBRARY SETUP =================

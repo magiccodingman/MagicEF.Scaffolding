@@ -28,6 +28,14 @@ namespace MagicEf.Scaffold.CommandActions
                 return;
             }
 
+            string? outputPath = ArgumentHelper.GetArgumentValue(args, "--outputPath");
+            if (!string.IsNullOrEmpty(outputPath) && !Directory.Exists(outputPath))
+            {
+                Directory.CreateDirectory(outputPath);
+                Console.WriteLine($"Created output directory: {outputPath}");
+                DeleteSeparatedVirtualFiles(outputPath);
+            }
+
             // Delete files ending with "SeparatedVirtual.cs"
             DeleteSeparatedVirtualFiles(directoryPath);
 
@@ -37,7 +45,7 @@ namespace MagicEf.Scaffold.CommandActions
 
             foreach (var csFile in csFiles)
             {
-                ProcessFile(csFile);
+                ProcessFile(csFile, outputPath);
             }
         }
 
@@ -68,7 +76,7 @@ namespace MagicEf.Scaffold.CommandActions
             }
         }
 
-        private void ProcessFile(string filePath)
+        private void ProcessFile(string filePath, string? outputPath)
         {
             var code = FileHelper.ReadFile(filePath);
             var root = RoslynHelper.ParseCode(code) as CompilationUnitSyntax;
@@ -99,6 +107,8 @@ namespace MagicEf.Scaffold.CommandActions
 
                 var newFileName = originalFileName + "SeparatedVirtual.cs";
                 var newFilePath = Path.Combine(directory, newFileName);
+                if (!string.IsNullOrEmpty(outputPath))
+                    newFilePath =Path.Combine(outputPath, newFileName);
 
                 // Create the partial class with virtual properties
                 var newRootVirtual = SyntaxFactory.CompilationUnit()
