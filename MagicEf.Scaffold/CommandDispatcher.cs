@@ -71,6 +71,11 @@ namespace MagicEf.Scaffold
                     migrationRunnerHandler.Handle(args);
                     break;
 
+                case "--flattenShareProtocol":
+                    var flattenShareProtocolHandler = new FlattenShareProtocolHandler();
+                    flattenShareProtocolHandler.Handle(args);
+                    break;
+
                 default:
                     Console.WriteLine("Unknown command. Use --help for usage information.");
                     break;

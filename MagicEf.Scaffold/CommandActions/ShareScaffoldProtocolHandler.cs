@@ -203,7 +203,7 @@ namespace MagicEf.Scaffold.CommandActions
                 sb.AppendLine("        }");
                 sb.AppendLine($"        public MagicViewDtoAttribute(string customViewDtoName)");
                 sb.AppendLine("        {");
-                sb.AppendLine("            IgnoreWhenFlattening = ignoreWhenFlattening;");
+                sb.AppendLine("            CustomViewDtoName = customViewDtoName;");
                 sb.AppendLine("        }");
                 sb.AppendLine("    }");
                 sb.AppendLine("}");
