@@ -14,7 +14,6 @@ $extensionsDirectory = ".\Extensions"        # Directory for extensions (default
 $metaDataDirectory = ".\MetaDataClasses"     # Directory for metadata classes (default: .\MetaDataClasses)
 $interfacesDirectory = ".\Interfaces"        # Directory for interfaces (default: .\Interfaces)
 $concreteDirectory = ".\Concrete"            # Directory for concrete classes (default: .\Concrete)
-$mappingDirectory = ".\MappingProfiles"            # Directory for mapping profile classes (default: .\MappingProfiles)
 $separateOutputVirtualDirectory = "" # (optional) Can specify separated virtual file directory. eg, ".\SeparatedVdFiles"
 
 # ---------------------------------------------------------------
@@ -120,7 +119,6 @@ if ($shareNamespace -ne ":") {
         --shareSharedExtensionsPath "$shareSharedExtensionsPath" `
         --shareSharedMetadataPath "$shareSharedMetadataPath" `
         --dbNamespace "$namespace" `
-        --dbMapperPath "$mappingDirectory" `
         --dbModelsPath "$modelsDirectory" `
         --dbExtensionsPath "$extensionsDirectory" `
         --dbMetadataPath "$metaDataDirectory"

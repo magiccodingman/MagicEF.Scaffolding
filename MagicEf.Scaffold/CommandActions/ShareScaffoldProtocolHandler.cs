@@ -24,7 +24,7 @@ namespace MagicEf.Scaffold.CommandActions
             string? shareReadOnlyModelsPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareReadOnlyModelsPath"));
             string? shareMetadataClassesPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareMetadataClassesPath"));
             string? shareViewDtoModelsPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareViewDtoModelsPath"));
-            string? dbMapperPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--dbMapperPath"));
+            //string? dbMapperPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--dbMapperPath"));
             string? shareSharedExtensionsPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareSharedExtensionsPath"));
             string? shareSharedMetadataPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareSharedMetadataPath"));
 
@@ -57,7 +57,6 @@ namespace MagicEf.Scaffold.CommandActions
                 string.IsNullOrEmpty(shareReadOnlyModelsPath) ||
                 string.IsNullOrEmpty(shareMetadataClassesPath) ||
                 string.IsNullOrEmpty(shareViewDtoModelsPath) ||
-                string.IsNullOrEmpty(dbMapperPath) ||
                 string.IsNullOrEmpty(shareSharedExtensionsPath) ||
                 string.IsNullOrEmpty(shareSharedMetadataPath)
                 )
@@ -73,7 +72,6 @@ namespace MagicEf.Scaffold.CommandActions
             EnsureDirectoryExists(shareReadOnlyModelsPath);
             EnsureDirectoryExists(shareMetadataClassesPath);
             EnsureDirectoryExists(shareViewDtoModelsPath);
-            EnsureDirectoryExists(dbMapperPath);
             EnsureDirectoryExists(shareSharedExtensionsPath);
             EnsureDirectoryExists(shareSharedMetadataPath);
 
@@ -137,7 +135,6 @@ namespace MagicEf.Scaffold.CommandActions
                     shareReadOnlyModelsPath!,
                     shareMetadataClassesPath!,
                     shareViewDtoModelsPath!,
-                    dbMapperPath!,
                     dbExtensionsPath,
                     shareSharedExtensionsPath!,
                     dbMetadataPath!,
@@ -196,13 +193,23 @@ namespace MagicEf.Scaffold.CommandActions
                 sb.AppendLine($"        public string ProjectName {{ get => \"{shareNamespace}\"; }}");
                 sb.AppendLine("        public string? CustomViewDtoName { get; }");
                 sb.AppendLine("        public bool IgnoreWhenFlattening { get; }");
+                sb.AppendLine("        public Type InterfaceType { get; }");
                 sb.AppendLine("");
-                sb.AppendLine($"        public MagicViewDtoAttribute(bool ignoreWhenFlattening = false)");
+                sb.AppendLine($"        public MagicViewDtoAttribute(Type interfaceType, bool ignoreWhenFlattening = false)");
                 sb.AppendLine("        {");
+                sb.AppendLine("            if (!interfaceType.IsInterface)");
+                sb.AppendLine("                throw new ArgumentException($\"The type '{interfaceType.Name}' must be an interface.\", nameof(interfaceType));");
+                sb.AppendLine();
+                sb.AppendLine("            InterfaceType = interfaceType;");
                 sb.AppendLine("            IgnoreWhenFlattening = ignoreWhenFlattening;");
                 sb.AppendLine("        }");
-                sb.AppendLine($"        public MagicViewDtoAttribute(string customViewDtoName)");
+                sb.AppendLine();
+                sb.AppendLine($"        public MagicViewDtoAttribute(Type interfaceType, string customViewDtoName)");
                 sb.AppendLine("        {");
+                sb.AppendLine("            if (!interfaceType.IsInterface)");
+                sb.AppendLine("                throw new ArgumentException($\"The type '{interfaceType.Name}' must be an interface.\", nameof(interfaceType));");
+                sb.AppendLine();
+                sb.AppendLine("            InterfaceType = interfaceType;");
                 sb.AppendLine("            CustomViewDtoName = customViewDtoName;");
                 sb.AppendLine("        }");
                 sb.AppendLine("    }");
@@ -286,7 +293,6 @@ namespace MagicEf.Scaffold.CommandActions
             string shareReadOnlyModelsPath,
             string shareMetadataClassesPath,
             string shareViewDtoModelsPath,
-            string dbMapperPath,
             string? dbExtensionsPath,
             string shareSharedExtensionsPath,
             string dbMetadataPath,
@@ -368,12 +374,13 @@ namespace MagicEf.Scaffold.CommandActions
             );
 
             // 8) Create (if missing) the mapper profile: {originalName}MapperProfile.cs
-            CreateMapperProfileIfMissing(
+            // This has been outdated due to the new flatten protocol making Automapper no longer necessary
+            /*CreateMapperProfileIfMissing(
                 originalName,
                 shareNamespace,
                 dbNamespace,
                 dbMapperPath
-            );
+            );*/
 
             // 9) Optionally fix up the {originalName}Extension.cs in the dbExtensionsPath if provided
             if (!string.IsNullOrEmpty(dbExtensionsPath))
@@ -563,7 +570,7 @@ namespace MagicEf.Scaffold.CommandActions
              string shareNamespace,
              string shareInterfaceExtensionsPath)
         {
-            var extensionFileName = $"I{originalName}Extension.cs";
+            var extensionFileName = $"I{originalName}ShareExtension.cs";
             var extensionFilePath = Path.Combine(shareInterfaceExtensionsPath, extensionFileName);
 
             if (File.Exists(extensionFilePath))
@@ -774,9 +781,9 @@ namespace MagicEf.Scaffold.CommandActions
             sb.AppendLine("{");
             //sb.AppendLine("    // Mark with [Preserve] to keep it from being stripped in AOT scenarios");
             //sb.AppendLine("    [Preserve]");
-            sb.AppendLine($"    [MagicViewDto]");
+            sb.AppendLine($"    [MagicViewDto(typeof({$"{interfaceName}ReadOnly"}))]");
             sb.AppendLine($"    [MetadataType(typeof({metaDataName}))]");
-            sb.AppendLine($"    public partial class {originalName}ViewDTO : {originalName}ReadOnly, {interfaceName}");
+            sb.AppendLine($"    public partial class {originalName}ViewDto : {originalName}ReadOnly, {interfaceName}");
             sb.AppendLine("    {");
             sb.AppendLine("        // Implement or override any properties beyond the read-only interface here if needed");
             sb.AppendLine("    }");
@@ -952,7 +959,7 @@ namespace MagicEf.Scaffold.CommandActions
     string shareNamespace,
     string dbMetadataPath)
         {
-            var expectedFileName = $"{originalName}Metadata.cs";
+            var expectedFileName = $"{originalName}ViewDtoMetadata.cs";
             var metadataFilePath = Path.Combine(dbMetadataPath, expectedFileName);
 
             if (!File.Exists(metadataFilePath))

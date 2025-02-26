@@ -230,7 +230,7 @@ namespace MagicEf.Scaffold.CommandActions
         /// Attributes on the class and properties are copied except for those in the ignore list.
         /// </summary>
         private string GenerateFlattenedClassContent(ClassDeclarationSyntax originalClass,
-     ClassDeclarationSyntax metadataClass, HashSet<string> usings, string targetNamespace, string flattenedName)
+    ClassDeclarationSyntax metadataClass, HashSet<string> usings, string targetNamespace, string flattenedName)
         {
             var sb = new StringBuilder();
 
@@ -242,6 +242,15 @@ namespace MagicEf.Scaffold.CommandActions
             sb.AppendLine();
             sb.AppendLine($"namespace {targetNamespace}");
             sb.AppendLine("{");
+
+            // **Extract and Keep Allowed Class-Level Attributes**
+            var classAttributes = GetPreservedClassAttributes(originalClass);
+
+            foreach (var attr in classAttributes)
+            {
+                sb.AppendLine($"    [{attr}]");
+            }
+
             sb.AppendLine($"    public partial class {flattenedName} : I{flattenedName}");
             sb.AppendLine("    {");
 
@@ -271,6 +280,23 @@ namespace MagicEf.Scaffold.CommandActions
 
 
 
+
+        private IEnumerable<AttributeSyntax> GetPreservedClassAttributes(ClassDeclarationSyntax originalClass)
+        {
+            var ignoredAttributes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "MagicViewDto",
+        "MetadataType"
+    };
+
+            return originalClass.AttributeLists
+                .SelectMany(attrList => attrList.Attributes)
+                .Where(attr =>
+                {
+                    string attrName = attr.Name.ToString();
+                    return !ignoredAttributes.Contains(attrName) && !ignoredAttributes.Contains(attrName + "Attribute");
+                });
+        }
 
 
 
