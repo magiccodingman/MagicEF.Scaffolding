@@ -194,7 +194,13 @@ namespace MagicEf.Scaffold.CommandActions
                 sb.AppendLine("        public string? CustomViewDtoName { get; }");
                 sb.AppendLine("        public bool IgnoreWhenFlattening { get; }");
                 sb.AppendLine("        public Type InterfaceType { get; }");
-                sb.AppendLine("");
+                sb.AppendLine();
+                sb.AppendLine("        /// <summary>");
+                sb.AppendLine("        /// ");
+                sb.AppendLine("        /// </summary>");
+                sb.AppendLine("        /// <param name=\"interfaceType\">The interface of the end desired connected model (aka the generated ReadOnly interfaces)</param>");
+                sb.AppendLine("        /// <param name=\"ignoreWhenFlattening\">When true, the variable will not be added to the flattened model</param>");
+                sb.AppendLine("        /// <exception cref=\"ArgumentException\"></exception>");
                 sb.AppendLine($"        public MagicViewDtoAttribute(Type interfaceType, bool ignoreWhenFlattening = false)");
                 sb.AppendLine("        {");
                 sb.AppendLine("            if (!interfaceType.IsInterface)");
@@ -204,6 +210,12 @@ namespace MagicEf.Scaffold.CommandActions
                 sb.AppendLine("            IgnoreWhenFlattening = ignoreWhenFlattening;");
                 sb.AppendLine("        }");
                 sb.AppendLine();
+                sb.AppendLine("        /// <summary>");
+                sb.AppendLine("        /// By default the flattened view DTO class name will match the class this attribute is attached to.");
+                sb.AppendLine("        /// </summary>");
+                sb.AppendLine("        /// <param name=\"interfaceType\">The interface of the end desired connected model (aka the generated ReadOnly interfaces)</param>");
+                sb.AppendLine("        /// <param name=\"customViewDtoName\">The desired flattened view DTO class name</param>");
+                sb.AppendLine("        /// <exception cref=\"ArgumentException\"></exception>");
                 sb.AppendLine($"        public MagicViewDtoAttribute(Type interfaceType, string customViewDtoName)");
                 sb.AppendLine("        {");
                 sb.AppendLine("            if (!interfaceType.IsInterface)");
@@ -240,6 +252,16 @@ namespace MagicEf.Scaffold.CommandActions
                 sb.AppendLine("    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]");
                 sb.AppendLine("    public sealed class MagicFlattenRemoveAttribute : Attribute");
                 sb.AppendLine("    {");
+                sb.AppendLine("        public bool Orphan { get; }");
+                sb.AppendLine();
+                sb.AppendLine("        /// <summary>");
+                sb.AppendLine("        /// ");
+                sb.AppendLine("        /// </summary>");
+                sb.AppendLine("        /// <param name=\"orphan\">Purposely orphan this variable, which removes the variable from validation testing</param>");
+                sb.AppendLine("        public MagicFlattenRemoveAttribute(bool orphan = false)");
+                sb.AppendLine("        {");
+                sb.AppendLine("            Orphan = orphan;");
+                sb.AppendLine("        }");
                 sb.AppendLine("    }");
                 sb.AppendLine("}");
             });
@@ -762,7 +784,7 @@ namespace MagicEf.Scaffold.CommandActions
             string shareNamespace,
             string shareViewDtoModelsPath)
         {
-            var fileName = $"{originalName}ViewDTO.cs";
+            var fileName = $"{originalName}ViewDto.cs";
             var filePath = Path.Combine(shareViewDtoModelsPath, fileName);
 
             if (File.Exists(filePath))
