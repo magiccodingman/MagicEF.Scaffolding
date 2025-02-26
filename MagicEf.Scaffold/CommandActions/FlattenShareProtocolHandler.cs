@@ -91,11 +91,8 @@ namespace MagicEf.Scaffold.CommandActions
                 Directory.CreateDirectory(flattenedInterfaceFolder);
                 Console.WriteLine("Created subfolders for ViewDTO and ServicesViewDTO.");
 
-                // Find all .cs files in the share project directory recursively.
-                var csFiles = Directory.GetFiles(shareProjectDirectory, "*.cs", SearchOption.AllDirectories);
-
                 // Filter to only files that contain [MagicViewDto] text.
-                var viewDtoFiles = csFiles.Where(f => File.ReadAllText(f).Contains("[MagicViewDto]")).ToList();
+                var viewDtoFiles = FindMagicViewDtoFiles(shareProjectDirectory);
 
                 Console.WriteLine($"Found {viewDtoFiles.Count} file(s) containing [MagicViewDto].");
 
@@ -136,6 +133,40 @@ namespace MagicEf.Scaffold.CommandActions
             }
         }
 
+        private List<string> FindMagicViewDtoFiles(string shareProjectDirectory)
+        {
+            var foundFiles = new List<string>();
+
+            var csFiles = Directory.GetFiles(shareProjectDirectory, "*.cs", SearchOption.AllDirectories);
+            foreach (var file in csFiles)
+            {
+                var originalCode = File.ReadAllText(file);
+                var syntaxTree = CSharpSyntaxTree.ParseText(originalCode);
+                var root = syntaxTree.GetRoot();
+
+                // Check if any class in the file has the `[MagicViewDto]` attribute
+                var classDeclarations = root.DescendantNodes().OfType<ClassDeclarationSyntax>();
+
+                foreach (var classDecl in classDeclarations)
+                {
+                    var magicAttr = GetAttributeSyntax(classDecl.AttributeLists, "MagicViewDto");
+                    if (magicAttr != null)
+                    {
+                        var (_, ignoreWhenFlattening) = GetMagicViewDtoParams(magicAttr);
+
+                        if (!ignoreWhenFlattening)
+                        {
+                            foundFiles.Add(file);
+                            break; // No need to check other classes in this file
+                        }
+                    }
+                }
+            }
+
+            return foundFiles;
+        }
+
+
         /// <summary>
         /// Processes a single view DTO file:
         ///  - Parses the file via Roslyn.
@@ -168,11 +199,17 @@ namespace MagicEf.Scaffold.CommandActions
             var magicAttr = GetAttributeSyntax(classDeclaration.AttributeLists, "MagicViewDto");
             if (magicAttr != null)
             {
-                var argExpr = magicAttr.ArgumentList?.Arguments.FirstOrDefault()?.Expression;
-                if (argExpr is LiteralExpressionSyntax literal &&
-                    !string.IsNullOrWhiteSpace(literal.Token.ValueText))
+                var (customViewDtoName, ignoreWhenFlattening) = GetMagicViewDtoParams(magicAttr);
+
+                if (!string.IsNullOrWhiteSpace(customViewDtoName))
                 {
-                    flattenedName = literal.Token.ValueText;
+                    flattenedName = customViewDtoName;
+                }
+
+                if (ignoreWhenFlattening)
+                {
+                    Console.WriteLine($"Skipping {filePath} because IgnoreWhenFlattening = true.");
+                    return;
                 }
             }
 
@@ -202,6 +239,42 @@ namespace MagicEf.Scaffold.CommandActions
             Console.WriteLine($"Created flattened interface: {flattenedInterfaceFileName}");
         }
 
+        private (string? customViewDtoName, bool ignoreWhenFlattening) GetMagicViewDtoParams(AttributeSyntax magicAttr)
+        {
+            string? customViewDtoName = null;
+            bool ignoreWhenFlattening = false;
+
+            if (magicAttr.ArgumentList?.Arguments.Count > 0)
+            {
+                var args = magicAttr.ArgumentList.Arguments;
+
+                // The first parameter is always `Type interfaceType`, so skip it.
+                if (args.Count >= 2)
+                {
+                    var secondArg = args[1].Expression;
+                    if (secondArg is LiteralExpressionSyntax stringLiteral && stringLiteral.Kind() == SyntaxKind.StringLiteralExpression)
+                    {
+                        customViewDtoName = stringLiteral.Token.ValueText; // Extracts `customViewDtoName`
+                    }
+                    else if (secondArg is LiteralExpressionSyntax boolLiteral && boolLiteral.IsKind(SyntaxKind.TrueLiteralExpression))
+                    {
+                        ignoreWhenFlattening = true; // Extracts `ignoreWhenFlattening = true`
+                    }
+                }
+
+                // If there's a third parameter, check if it's `ignoreWhenFlattening`
+                if (args.Count >= 3)
+                {
+                    var thirdArg = args[2].Expression;
+                    if (thirdArg is LiteralExpressionSyntax boolLiteral && boolLiteral.IsKind(SyntaxKind.TrueLiteralExpression))
+                    {
+                        ignoreWhenFlattening = true; // Extracts `ignoreWhenFlattening = true`
+                    }
+                }
+            }
+
+            return (customViewDtoName, ignoreWhenFlattening);
+        }
 
 
         private ClassDeclarationSyntax GetMetadataClassDeclaration(ClassDeclarationSyntax classDeclaration)
@@ -258,8 +331,17 @@ namespace MagicEf.Scaffold.CommandActions
 
             foreach (var prop in properties)
             {
-                if (HasAttribute(prop.AttributeLists, "MagicFlattenRemove"))
-                    continue; // Skip properties marked with MagicFlattenRemove
+                var flattenRemoveAttr = GetAttributeSyntax(prop.AttributeLists, "MagicFlattenRemove");
+
+                if (flattenRemoveAttr != null)
+                {
+                    bool removeFromFlattenDto = GetRemoveFromFlattenDtoValue(flattenRemoveAttr);
+
+                    if (removeFromFlattenDto)
+                    {
+                        continue; // ✅ Only remove if RemoveFromFlattenDto is TRUE
+                    }
+                }
 
                 // Deduplicate attributes while maintaining order
                 var mergedAttributes = GetMergedAttributes(prop, metadataClass).DistinctBy(attr => attr.ToString());
@@ -278,6 +360,26 @@ namespace MagicEf.Scaffold.CommandActions
             return sb.ToString();
         }
 
+        private bool GetRemoveFromFlattenDtoValue(AttributeSyntax magicAttr)
+        {
+            // Default to TRUE if the attribute is present but has no arguments
+            bool removeFromFlattenDto = true;
+
+            if (magicAttr.ArgumentList?.Arguments.Count > 0)
+            {
+                var firstArg = magicAttr.ArgumentList.Arguments[0].Expression;
+
+                if (firstArg is LiteralExpressionSyntax boolLiteral)
+                {
+                    if (boolLiteral.IsKind(SyntaxKind.FalseLiteralExpression))
+                    {
+                        removeFromFlattenDto = false; // ✅ If explicitly FALSE, we keep the property
+                    }
+                }
+            }
+
+            return removeFromFlattenDto;
+        }
 
 
 
@@ -733,6 +835,7 @@ namespace MagicEf.Scaffold.CommandActions
             string[] ignored = {
         "MagicViewDto",
         "MagicFlattenRemove",
+        "MagicOrphan",
         "MagicFlattenInterfaceRemove",
         "MetadataType" // Explicitly add back here for the class-level
     };

@@ -122,6 +122,7 @@ namespace MagicEf.Scaffold.CommandActions
             CreateMagiViewDtoAttribute(shareNamespace, magicReadOnlyPath);
             CreateMagicFlattenRemoveAttribute(shareNamespace, magicReadOnlyPath);
             CreateMagicFlattenInterfaceRemoveAttribute(shareNamespace, magicReadOnlyPath);
+            CreateMagicOrphanAttribute(shareNamespace, magicReadOnlyPath);
 
             // Process each filtered model file
             foreach (var modelFile in filteredFiles)
@@ -187,6 +188,10 @@ namespace MagicEf.Scaffold.CommandActions
             {
                 sb.AppendLine($"namespace {shareNamespace}");
                 sb.AppendLine("{");
+                sb.AppendLine("    /// <summary>");
+                sb.AppendLine("    /// Allows Magic EF to recognize this as a class desired to be part of the flattening share protocol ");
+                sb.AppendLine("    /// which will auto create your flattened DTO without any auto mapping requirements.");
+                sb.AppendLine("    /// </summary>");
                 sb.AppendLine("    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]");
                 sb.AppendLine("    public sealed class MagicViewDtoAttribute : Attribute");
                 sb.AppendLine("    {");
@@ -223,6 +228,7 @@ namespace MagicEf.Scaffold.CommandActions
                 sb.AppendLine();
                 sb.AppendLine("            InterfaceType = interfaceType;");
                 sb.AppendLine("            CustomViewDtoName = customViewDtoName;");
+                sb.AppendLine("            IgnoreWhenFlattening = false;");
                 sb.AppendLine("        }");
                 sb.AppendLine("    }");
                 sb.AppendLine("}");
@@ -249,19 +255,55 @@ namespace MagicEf.Scaffold.CommandActions
             {
                 sb.AppendLine($"namespace {shareNamespace}");
                 sb.AppendLine("{");
+                sb.AppendLine("    /// <summary>");
+                sb.AppendLine("    /// Removes this variable from being added to the auto generated flat view DTO and the generated interface.");
+                sb.AppendLine("    /// </summary>");
                 sb.AppendLine("    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]");
                 sb.AppendLine("    public sealed class MagicFlattenRemoveAttribute : Attribute");
                 sb.AppendLine("    {");
-                sb.AppendLine("        public bool Orphan { get; }");
+                // removed because this was too needlessly complex.
+/*                sb.AppendLine("        public bool Orphan { get; }");
+                sb.AppendLine("        public bool RemoveFromFlattenDto { get; }");
                 sb.AppendLine();
                 sb.AppendLine("        /// <summary>");
                 sb.AppendLine("        /// ");
                 sb.AppendLine("        /// </summary>");
                 sb.AppendLine("        /// <param name=\"orphan\">Purposely orphan this variable, which removes the variable from validation testing</param>");
-                sb.AppendLine("        public MagicFlattenRemoveAttribute(bool orphan = false)");
+                sb.AppendLine("        public MagicFlattenRemoveAttribute(bool removeFromFlattenDto = true, bool orphan = false)");
                 sb.AppendLine("        {");
+                sb.AppendLine("            RemoveFromFlattenDto = removeFromFlattenDto;");
                 sb.AppendLine("            Orphan = orphan;");
-                sb.AppendLine("        }");
+                sb.AppendLine("        }");*/
+                sb.AppendLine("    }");
+                sb.AppendLine("}");
+            });
+
+            Console.WriteLine($"Created/Refreshed read-only interface: {fileName}");
+        }
+
+        private void CreateMagicOrphanAttribute(
+    string shareNamespace,
+    string magicReadOnlyPath)
+        {
+            var fileName = $"MagicOrphanReadOnly.cs";
+            var filePath = Path.Combine(magicReadOnlyPath, fileName);
+            // Define required usings for this file
+            var predefinedUsings = new string[]
+            {
+                // Add any necessary usings here if required for all read-only interfaces
+            };
+
+            // Write the file while preserving any extra usings
+            WriteFilePreservingExtraUsings(filePath, predefinedUsings, sb =>
+            {
+                sb.AppendLine($"namespace {shareNamespace}");
+                sb.AppendLine("{");
+                sb.AppendLine("    /// <summary>");
+                sb.AppendLine("    /// Purposely orphan this variable, which removes the variable from validation testing");
+                sb.AppendLine("    /// </summary>");
+                sb.AppendLine("    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]");
+                sb.AppendLine("    public sealed class MagicOrphanAttribute : Attribute");
+                sb.AppendLine("    {");
                 sb.AppendLine("    }");
                 sb.AppendLine("}");
             });
@@ -286,6 +328,9 @@ namespace MagicEf.Scaffold.CommandActions
             {
                 sb.AppendLine($"namespace {shareNamespace}");
                 sb.AppendLine("{");
+                sb.AppendLine("    /// <summary>");
+                sb.AppendLine("    /// Removes this variable from being added to the flattened DTO interface that'll be created.");
+                sb.AppendLine("    /// </summary>");
                 sb.AppendLine("    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]");
                 sb.AppendLine("    public sealed class MagicFlattenInterfaceRemoveAttribute : Attribute");
                 sb.AppendLine("    {");
