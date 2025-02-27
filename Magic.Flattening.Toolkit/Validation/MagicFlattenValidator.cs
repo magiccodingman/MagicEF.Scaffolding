@@ -11,7 +11,7 @@ namespace Magic.Flattening.Toolkit.Validation
 {
     public static class MagicFlattenValidator
     {
-        // Build opcode lookup arrays for IL parsing
+        // IL OpCode lookup arrays for IL parsing
         private static readonly OpCode[] singleByteOpCodes = new OpCode[0x100];
         private static readonly OpCode[] multiByteOpCodes = new OpCode[0x100];
 
@@ -31,9 +31,6 @@ namespace Magic.Flattening.Toolkit.Validation
             }
         }
 
-        /// <summary>
-        /// Validates all types marked with MagicViewDtoAttribute (and not ignored) and returns a list of (error, className, errorMessage) tuples.
-        /// </summary>
         public static List<(string className, string errorMessage)> ValidateFlattenMappings(string? specificProject = null)
         {
             var results = new List<(string className, string errorMessage)>();
@@ -65,7 +62,6 @@ namespace Magic.Flattening.Toolkit.Validation
                 var interfaceProperties = interfaceType.GetProperties();
                 var classProperties = GetAllProperties(type);
 
-                // Check if all interface properties exist (even if inherited)
                 var missingProperties = interfaceProperties
                     .Where(p => !classProperties.Any(cp => cp.Name == p.Name && cp.PropertyType == p.PropertyType))
                     .ToList();
@@ -77,20 +73,23 @@ namespace Magic.Flattening.Toolkit.Validation
                     continue;
                 }
 
-                // Strict Validation of MagicFlattenRemove
                 foreach (var prop in classProperties)
                 {
                     var flattenRemove = prop.GetCustomAttribute<MagicFlattenRemoveAttribute>();
                     if (flattenRemove != null)
                     {
-                        var orphaned = prop.GetCustomAttribute<MagicOrphanAttribute>() != null;
-                        if (!orphaned)
+                        var isValid = ValidateFlattenProperty(type, prop, out bool getFailed, out bool setFailed);
+
+                        if (!isValid)
                         {
-                            bool isValid = ValidateFlattenProperty(type, prop);
-                            if (!isValid)
-                            {
-                                results.Add((type.FullName!, $"{type.Name}.{prop.Name} has MagicFlattenRemove but does not map properly to a non-removed property."));
-                            }
+                            string errorDetails = getFailed && setFailed
+                                ? "Getter and Setter failed validation."
+                                : getFailed
+                                    ? "Getter failed validation."
+                                    : "Setter failed validation.";
+
+                            results.Add((type.FullName!,
+                                $"{type.Name}.{prop.Name} has MagicFlattenRemove but does not map properly to a non-removed property. {errorDetails}"));
                         }
                     }
                 }
@@ -99,49 +98,57 @@ namespace Magic.Flattening.Toolkit.Validation
             return results;
         }
 
-        /// <summary>
-        /// Validates that a property marked with MagicFlattenRemove has both getter and setter that (directly or indirectly)
-        /// reference at least one property without MagicFlattenRemove.
-        /// </summary>
-        private static bool ValidateFlattenProperty(Type type, PropertyInfo property)
+        private static bool ValidateFlattenProperty(Type type, PropertyInfo property, out bool getFailed, out bool setFailed)
         {
             var getMethod = property.GetGetMethod();
             var setMethod = property.GetSetMethod();
 
-            if (getMethod == null || setMethod == null)
-                return false;
+            getFailed = false;
+            setFailed = false;
 
-            // Use separate visited sets for get and set to prevent infinite recursion
-            bool validGetter = HasValidReferenceFromMethod(getMethod, type, new HashSet<string>(), property.Name);
-            bool validSetter = HasValidReferenceFromMethod(setMethod, type, new HashSet<string>(), property.Name);
+            bool isPropertyOrphaned = property.GetCustomAttribute<MagicOrphanAttribute>() != null;
+
+            bool validGetter = true;
+            bool validSetter = true;
+
+            if (!isPropertyOrphaned && getMethod != null)
+            {
+                bool isGetterOrphaned = getMethod.GetCustomAttribute<MagicOrphanAttribute>() != null;
+                if (!isGetterOrphaned)
+                {
+                    HashSet<string> visitedProperties = new HashSet<string>();
+                    validGetter = HasValidReferenceFromMethod(getMethod, type, visitedProperties, property.Name);
+                    if (!validGetter) getFailed = true;
+                }
+            }
+
+            if (!isPropertyOrphaned && setMethod != null)
+            {
+                bool isSetterOrphaned = setMethod.GetCustomAttribute<MagicOrphanAttribute>() != null;
+                if (!isSetterOrphaned)
+                {
+                    HashSet<string> visitedProperties = new HashSet<string>();
+                    validSetter = HasValidReferenceFromMethod(setMethod, type, visitedProperties, property.Name);
+                    if (!validSetter) setFailed = true;
+                }
+            }
 
             return validGetter && validSetter;
         }
 
-        /// <summary>
-        /// Recursively inspects a method’s IL to determine if it eventually calls (directly or via nested calls)
-        /// a property accessor for a property that is not marked with MagicFlattenRemove.
-        /// </summary>
         private static bool HasValidReferenceFromMethod(MethodInfo method, Type type, HashSet<string> visitedProperties, string originalPropertyName)
         {
-            // Iterate through all properties of the type (including inherited ones)
             foreach (var prop in GetAllProperties(type))
             {
-                if (prop.Name == originalPropertyName)
-                    continue; // Avoid self-reference
+                if (prop.Name == originalPropertyName) continue;
+                if (visitedProperties.Contains(prop.Name)) continue;
 
-                if (visitedProperties.Contains(prop.Name))
-                    continue; // Prevent infinite recursion
-
-                // If the IL of this method calls an accessor of this property...
                 if (ILMethodCallsProperty(method, prop))
                 {
-                    // If the property is not removed, then we have a valid mapping.
                     if (prop.GetCustomAttribute<MagicFlattenRemoveAttribute>() == null)
                         return true;
                     else
                     {
-                        // Otherwise, recursively check the getter of the removed property.
                         var nestedGetter = prop.GetGetMethod();
                         if (nestedGetter != null)
                         {
@@ -155,24 +162,18 @@ namespace Magic.Flattening.Toolkit.Validation
             return false;
         }
 
-        /// <summary>
-        /// Analyzes a method’s IL instructions to see if it calls a property accessor (getter or setter) for the given property.
-        /// </summary>
         private static bool ILMethodCallsProperty(MethodInfo method, PropertyInfo property)
         {
             var methodBody = method.GetMethodBody();
-            if (methodBody == null)
-                return false;
+            if (methodBody == null) return false;
 
             byte[] ilBytes = methodBody.GetILAsByteArray();
-            if (ilBytes == null)
-                return false;
+            if (ilBytes == null) return false;
 
             int position = 0;
             while (position < ilBytes.Length)
             {
                 OpCode opcode;
-                // Read the next opcode (handle multi-byte opcodes)
                 byte code = ilBytes[position++];
                 if (code == 0xFE)
                 {
@@ -184,7 +185,6 @@ namespace Magic.Flattening.Toolkit.Validation
                     opcode = singleByteOpCodes[code];
                 }
 
-                // If the opcode is a call or callvirt then read the metadata token (4 bytes)
                 if (opcode == OpCodes.Call || opcode == OpCodes.Callvirt)
                 {
                     int metadataToken = BitConverter.ToInt32(ilBytes, position);
@@ -194,59 +194,16 @@ namespace Magic.Flattening.Toolkit.Validation
                         MemberInfo? member = method.Module.ResolveMember(metadataToken);
                         if (member is MethodInfo mi)
                         {
-                            // Check if the called method is one of the property's accessors.
                             if (mi == property.GetGetMethod() || mi == property.GetSetMethod())
                                 return true;
                         }
                     }
-                    catch
-                    {
-                        // ignore resolution errors
-                    }
-                }
-                else
-                {
-                    // Skip operand bytes based on the opcode’s operand type.
-                    switch (opcode.OperandType)
-                    {
-                        case OperandType.InlineNone:
-                            break;
-                        case OperandType.ShortInlineBrTarget:
-                        case OperandType.ShortInlineI:
-                        case OperandType.ShortInlineVar:
-                            position += 1;
-                            break;
-                        case OperandType.InlineVar:
-                            position += 2;
-                            break;
-                        case OperandType.InlineI:
-                        case OperandType.InlineBrTarget:
-                        case OperandType.InlineField:
-                        case OperandType.InlineMethod:
-                        case OperandType.InlineSig:
-                        case OperandType.InlineString:
-                        case OperandType.InlineTok:
-                        case OperandType.InlineType:
-                            position += 4;
-                            break;
-                        case OperandType.InlineI8:
-                        case OperandType.InlineR:
-                            position += 8;
-                            break;
-                        case OperandType.ShortInlineR:
-                            position += 4;
-                            break;
-                        default:
-                            break;
-                    }
+                    catch { }
                 }
             }
             return false;
         }
 
-        /// <summary>
-        /// Retrieves all public instance properties from a class, including inherited ones.
-        /// </summary>
         private static List<PropertyInfo> GetAllProperties(Type type)
         {
             var properties = new List<PropertyInfo>();
@@ -258,9 +215,6 @@ namespace Magic.Flattening.Toolkit.Validation
             return properties;
         }
 
-        /// <summary>
-        /// Safely retrieves types from an assembly, even if some fail to load.
-        /// </summary>
         private static IEnumerable<Type> SafeGetTypes(Assembly assembly)
         {
             try
@@ -273,5 +227,4 @@ namespace Magic.Flattening.Toolkit.Validation
             }
         }
     }
-
 }
