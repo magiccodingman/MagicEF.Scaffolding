@@ -286,6 +286,66 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     }
 
     /// <summary>
+    /// DummyLongValue muddies the get but properly orphan attributed the problem
+    /// </summary>
+    [ShouldPass(false)]
+    [MagicViewDto(typeof(IGeoLocation))]
+    public class GeoLocation_Pass10 : IGeoLocation
+    {
+        [MagicOrphan]
+        [MagicFlattenRemove]
+        public decimal DummyLongValue { get; set; }
+
+        public decimal Longitude { get; set; }
+        public decimal Latitude { get; set; }
+
+        [MagicFlattenRemove]
+        public DummyPoint Location
+        {
+            get => new DummyPoint()
+            {
+                DumbNumber = (double)Longitude * (double)DummyLongValue
+            };
+            set
+            {
+                Latitude = (decimal)value.DumbNumber * 4;
+            }
+        }
+    }
+
+    /// <summary>
+    /// DummyLongValue muddies the get but properly orphan attributed the problem getter
+    /// </summary>
+    [ShouldPass(false)]
+    [MagicViewDto(typeof(IGeoLocation))]
+    public class GeoLocation_Pass11 : IGeoLocation
+    {
+        
+        [MagicFlattenRemove]
+        public decimal DummyLongValue {
+            [MagicOrphan]
+            get; 
+            set; 
+        }
+
+        public decimal Longitude { get; set; }
+        public decimal Latitude { get; set; }
+
+        [MagicFlattenRemove]
+        public DummyPoint Location
+        {
+            get => new DummyPoint()
+            {
+                DumbNumber = (double)Longitude * (double)DummyLongValue
+            };
+            set
+            {
+                Latitude = (decimal)value.DumbNumber * 4;
+            }
+        }
+    }
+
+    /// <summary>
     /// A bad "get" that should fail
     /// </summary>
     [ShouldPass(false)]
@@ -382,8 +442,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     }
 
     /// <summary>
-    /// Removed the required, "Long" which is enforced from the IGeoLocation 
-    /// and thus also has no getters or setters
+    /// DummyLongValue muddies Latitude in the set
     /// </summary>
     [ShouldPass(false)]
     [MagicViewDto(typeof(IGeoLocation))]
@@ -400,7 +459,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
         {
             get => new DummyPoint()
             {
-                DumbNumber = (double)Longitude * (double)DummyLongValue
+                DumbNumber = (double)Longitude * 4
             };
             set
             {
@@ -411,8 +470,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     }
 
     /// <summary>
-    /// Removed the required, "Long" which is enforced from the IGeoLocation 
-    /// and thus also has no getters or setters
+    /// No valid sets
     /// </summary>
     [ShouldPass(false)]
     [MagicViewDto(typeof(IGeoLocation))]
@@ -429,7 +487,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
         {
             get => new DummyPoint()
             {
-                DumbNumber = (double)Longitude * (double)DummyLongValue
+                DumbNumber = (double)Longitude * 4
             };
             set
             {
@@ -438,6 +496,9 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
         }
     }
 
+    /// <summary>
+    /// DummyLongValue muddies the get
+    /// </summary>
     [ShouldPass(false)]
     [MagicViewDto(typeof(IGeoLocation))]
     public class GeoLocation_Fail7 : IGeoLocation
@@ -457,8 +518,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
             };
             set
             {
-                DummyLongValue = (decimal)value.DumbNumber * 10;
-                Latitude = (decimal)value.DumbNumber * DummyLongValue;
+                Latitude = (decimal)value.DumbNumber * 4;
             }
         }
     }
