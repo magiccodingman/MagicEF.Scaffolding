@@ -44,7 +44,7 @@ namespace Flattening.Protocol.Tests
                 expectedResults[type.FullName] = shouldPassAttr.ShouldPass;  // 🔥 Store FULLY QUALIFIED Name
             }
 
-            var results = MagicFlattenValidator.ValidateFlattenMappings();
+            List<(string className, string errorMessage)> results = MagicFlattenValidator.ValidateFlattenMappings();
 
             // Track actual validation failures (FULLY QUALIFIED)
             var actualFailures = results.ToDictionary(r => r.className, r => r.errorMessage);

@@ -36,8 +36,9 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
         [MagicFlattenRemove]
         public DummyPoint Location
         {
-            get => new DummyPoint() { 
-                DumbNumber = (double)Longitude * (double)Latitude 
+            get => new DummyPoint()
+            {
+                DumbNumber = (double)Longitude * (double)Latitude
             };
             set
             {
@@ -219,6 +220,72 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     }
 
     /// <summary>
+    /// Should pass even though the connected long in the getter 
+    /// is removed as well because that removed property then references 
+    /// an un-remved flattened property.
+    /// </summary>
+    [ShouldPass(true)]
+    [MagicViewDto(typeof(IGeoLocation))]
+    public class GeoLocation_Pass8 : IGeoLocation
+    {
+        [MagicFlattenRemove]
+        public decimal Longitude
+        {
+            get => _Longitude; set
+            {
+                _Longitude = value;
+            }
+        }
+
+        public decimal _Longitude { get; set; }
+
+        public decimal Latitude { get; set; }
+
+        [MagicFlattenRemove]
+        public DummyPoint Location
+        {
+            get => new DummyPoint()
+            {
+                DumbNumber = (double)Longitude
+            };
+            set
+            {
+                Longitude = (decimal)value.DumbNumber * 10;
+                Latitude = (decimal)value.DumbNumber * 3;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Same pass as pass1, but just adding a weird dummy variable that 
+    /// isn't related to the end IGeoLocation.
+    /// </summary>
+    [ShouldPass(true)]
+    [MagicViewDto(typeof(IGeoLocation))]
+    public class GeoLocation_Pass9 : IGeoLocation
+    {
+        [MagicFlattenRemove]
+        public decimal DummyLongValue { get; set; }
+
+        public decimal Longitude { get; set; }
+        public decimal Latitude { get; set; }
+
+        [MagicFlattenRemove]
+        public DummyPoint Location
+        {
+            get => new DummyPoint()
+            {
+                DumbNumber = (double)Longitude * (double)Latitude
+            };
+            set
+            {
+                Longitude = (decimal)value.DumbNumber * 10;
+                Latitude = (decimal)value.DumbNumber * 3;
+            }
+        }
+    }
+
+    /// <summary>
     /// A bad "get" that should fail
     /// </summary>
     [ShouldPass(false)]
@@ -286,4 +353,113 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
         }
     }
 
+
+    /// <summary>
+    /// Removed the required, "Long" which is enforced from the IGeoLocation 
+    /// and thus also has no getters or setters
+    /// </summary>
+    [ShouldPass(false)]
+    [MagicViewDto(typeof(IGeoLocation))]
+    public class GeoLocation_Fail4 : IGeoLocation
+    {
+        [MagicFlattenRemove]
+        public decimal Longitude { get; set; }
+        public decimal Latitude { get; set; }
+
+        [MagicFlattenRemove]
+        public DummyPoint Location
+        {
+            get => new DummyPoint()
+            {
+                DumbNumber = (double)Longitude * (double)Latitude
+            };
+            set
+            {
+                Longitude = (decimal)value.DumbNumber * 10;
+                Latitude = (decimal)value.DumbNumber * 3;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Removed the required, "Long" which is enforced from the IGeoLocation 
+    /// and thus also has no getters or setters
+    /// </summary>
+    [ShouldPass(false)]
+    [MagicViewDto(typeof(IGeoLocation))]
+    public class GeoLocation_Fail5 : IGeoLocation
+    {
+        [MagicFlattenRemove]
+        public decimal DummyLongValue { get; set; }
+
+        public decimal Longitude { get; set; }
+        public decimal Latitude { get; set; }
+
+        [MagicFlattenRemove]
+        public DummyPoint Location
+        {
+            get => new DummyPoint()
+            {
+                DumbNumber = (double)Longitude * (double)DummyLongValue
+            };
+            set
+            {
+                Longitude = (decimal)value.DumbNumber * 10;
+                Latitude = (decimal)value.DumbNumber * DummyLongValue;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Removed the required, "Long" which is enforced from the IGeoLocation 
+    /// and thus also has no getters or setters
+    /// </summary>
+    [ShouldPass(false)]
+    [MagicViewDto(typeof(IGeoLocation))]
+    public class GeoLocation_Fail6 : IGeoLocation
+    {
+        [MagicFlattenRemove]
+        public decimal DummyLongValue { get; set; }
+
+        public decimal Longitude { get; set; }
+        public decimal Latitude { get; set; }
+
+        [MagicFlattenRemove]
+        public DummyPoint Location
+        {
+            get => new DummyPoint()
+            {
+                DumbNumber = (double)Longitude * (double)DummyLongValue
+            };
+            set
+            {
+                DummyLongValue = (decimal)value.DumbNumber * 10;
+            }
+        }
+    }
+
+    [ShouldPass(false)]
+    [MagicViewDto(typeof(IGeoLocation))]
+    public class GeoLocation_Fail7 : IGeoLocation
+    {
+        [MagicFlattenRemove]
+        public decimal DummyLongValue { get; set; }
+
+        public decimal Longitude { get; set; }
+        public decimal Latitude { get; set; }
+
+        [MagicFlattenRemove]
+        public DummyPoint Location
+        {
+            get => new DummyPoint()
+            {
+                DumbNumber = (double)Longitude * (double)DummyLongValue
+            };
+            set
+            {
+                DummyLongValue = (decimal)value.DumbNumber * 10;
+                Latitude = (decimal)value.DumbNumber * DummyLongValue;
+            }
+        }
+    }
 }

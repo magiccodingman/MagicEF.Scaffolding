@@ -11,7 +11,6 @@ namespace Magic.Flattening.Toolkit.Validation
 {
     public static class MagicFlattenValidator
     {
-        // IL OpCode lookup arrays for IL parsing
         private static readonly OpCode[] singleByteOpCodes = new OpCode[0x100];
         private static readonly OpCode[] multiByteOpCodes = new OpCode[0x100];
 
@@ -33,7 +32,7 @@ namespace Magic.Flattening.Toolkit.Validation
 
         public static List<(string className, string errorMessage)> ValidateFlattenMappings(string? specificProject = null)
         {
-            var results = new List<(string className, string errorMessage)>();
+            var results = new Dictionary<string, string>(); // ✅ Use Dictionary to merge errors per class.
 
             var assembliesToScan = AppDomain.CurrentDomain.GetAssemblies()
                 .Where(assembly => specificProject == null || assembly.GetName().Name!.Contains(specificProject, StringComparison.OrdinalIgnoreCase))
@@ -55,7 +54,7 @@ namespace Magic.Flattening.Toolkit.Validation
                 var interfaceType = attribute.InterfaceType;
                 if (interfaceType == null)
                 {
-                    results.Add((type.FullName!, $"{type.Name} has a null InterfaceType in MagicViewDto."));
+                    AddError(results, type.FullName!, $"{type.Name} has a null InterfaceType in MagicViewDto.");
                     continue;
                 }
 
@@ -68,8 +67,8 @@ namespace Magic.Flattening.Toolkit.Validation
 
                 if (missingProperties.Any())
                 {
-                    results.Add((type.FullName!, $"Error: {type.FullName} is missing required properties: " +
-                        string.Join(", ", missingProperties.Select(p => p.Name))));
+                    AddError(results, type.FullName!, $"Error: {type.FullName} is missing required properties: " +
+                        string.Join(", ", missingProperties.Select(p => p.Name)));
                     continue;
                 }
 
@@ -78,7 +77,7 @@ namespace Magic.Flattening.Toolkit.Validation
                     var flattenRemove = prop.GetCustomAttribute<MagicFlattenRemoveAttribute>();
                     if (flattenRemove != null)
                     {
-                        var isValid = ValidateFlattenProperty(type, prop, out bool getFailed, out bool setFailed);
+                        var isValid = ValidateFlattenProperty(type, prop, interfaceType, out bool getFailed, out bool setFailed);
 
                         if (!isValid)
                         {
@@ -88,17 +87,34 @@ namespace Magic.Flattening.Toolkit.Validation
                                     ? "Getter failed validation."
                                     : "Setter failed validation.";
 
-                            results.Add((type.FullName!,
-                                $"{type.Name}.{prop.Name} has MagicFlattenRemove but does not map properly to a non-removed property. {errorDetails}"));
+                            AddError(results, type.FullName!,
+                                $"{type.Name}.{prop.Name} has MagicFlattenRemove but does not map properly to a non-removed property. {errorDetails}");
                         }
                     }
                 }
             }
 
-            return results;
+            return results.Select(kv => (kv.Key, kv.Value)).ToList();
         }
 
-        private static bool ValidateFlattenProperty(Type type, PropertyInfo property, out bool getFailed, out bool setFailed)
+        /// <summary>
+        /// Adds an error message for a given class, ensuring no duplicates.
+        /// If multiple errors exist, they are combined into a single entry.
+        /// </summary>
+        private static void AddError(Dictionary<string, string> results, string className, string errorMessage)
+        {
+            if (results.ContainsKey(className))
+            {
+                // ✅ Merge multiple errors into a single entry instead of duplicating.
+                results[className] += Environment.NewLine + errorMessage;
+            }
+            else
+            {
+                results[className] = errorMessage;
+            }
+        }
+
+        private static bool ValidateFlattenProperty(Type type, PropertyInfo property, Type interfaceType, out bool getFailed, out bool setFailed)
         {
             var getMethod = property.GetGetMethod();
             var setMethod = property.GetSetMethod();
@@ -106,61 +122,104 @@ namespace Magic.Flattening.Toolkit.Validation
             getFailed = false;
             setFailed = false;
 
+            // ✅ Step 1: Ensure this property exists in the interface before validating
+            bool existsInInterface = interfaceType.GetProperty(property.Name) != null;
+            if (!existsInInterface)
+                return true; // Skip validation if it's not in the provided interface!
+
             bool isPropertyOrphaned = property.GetCustomAttribute<MagicOrphanAttribute>() != null;
 
             bool validGetter = true;
             bool validSetter = true;
 
+            // ✅ Step 2: Validate the Getter (Detect Muddied Values)
             if (!isPropertyOrphaned && getMethod != null)
             {
                 bool isGetterOrphaned = getMethod.GetCustomAttribute<MagicOrphanAttribute>() != null;
                 if (!isGetterOrphaned)
                 {
-                    HashSet<string> visitedProperties = new HashSet<string>();
-                    validGetter = HasValidReferenceFromMethod(getMethod, type, visitedProperties, property.Name);
-                    if (!validGetter) getFailed = true;
+                    HashSet<string> visitedMethods = new HashSet<string>();
+                    validGetter = HasValidReferenceFromMethod(getMethod, type, visitedMethods, property.Name, out string muddiedError);
+
+                    if (!validGetter)
+                    {
+                        getFailed = true;
+                        if (!string.IsNullOrEmpty(muddiedError))
+                            Console.WriteLine($"[ERROR] {type.FullName}.{property.Name} getter is muddied by {muddiedError}");
+                    }
                 }
             }
 
+            // ✅ Step 3: Validate the Setter (Detect Muddied Values)
             if (!isPropertyOrphaned && setMethod != null)
             {
                 bool isSetterOrphaned = setMethod.GetCustomAttribute<MagicOrphanAttribute>() != null;
                 if (!isSetterOrphaned)
                 {
-                    HashSet<string> visitedProperties = new HashSet<string>();
-                    validSetter = HasValidReferenceFromMethod(setMethod, type, visitedProperties, property.Name);
-                    if (!validSetter) setFailed = true;
+                    HashSet<string> visitedMethods = new HashSet<string>();
+                    validSetter = HasValidReferenceFromMethod(setMethod, type, visitedMethods, property.Name, out string muddiedError);
+
+                    if (!validSetter)
+                    {
+                        setFailed = true;
+                        if (!string.IsNullOrEmpty(muddiedError))
+                            Console.WriteLine($"[ERROR] {type.FullName}.{property.Name} setter is muddied by {muddiedError}");
+                    }
                 }
             }
 
             return validGetter && validSetter;
         }
 
-        private static bool HasValidReferenceFromMethod(MethodInfo method, Type type, HashSet<string> visitedProperties, string originalPropertyName)
+
+        private static bool HasValidReferenceFromMethod(MethodInfo method, Type type, HashSet<string> visitedMethods, string originalPropertyName, out string muddiedError)
         {
-            foreach (var prop in GetAllProperties(type))
+            muddiedError = string.Empty;
+
+            if (visitedMethods.Contains(method.Name))
+                return false; // Prevent infinite recursion
+
+            visitedMethods.Add(method.Name);
+
+            var allProperties = GetAllProperties(type);
+
+            foreach (var prop in allProperties)
             {
-                if (prop.Name == originalPropertyName) continue;
-                if (visitedProperties.Contains(prop.Name)) continue;
+                var flattenRemove = prop.GetCustomAttribute<MagicFlattenRemoveAttribute>();
 
                 if (ILMethodCallsProperty(method, prop))
                 {
-                    if (prop.GetCustomAttribute<MagicFlattenRemoveAttribute>() == null)
-                        return true;
-                    else
+                    if (flattenRemove == null)
+                        return true; // ✅ Valid, found a direct reference to a non-removed property.
+
+                    // ❌ Muddied Case: The method references a MagicFlattenRemove property
+                    muddiedError = $"{prop.Name} (MagicFlattenRemove)";
+
+                    // ✅ Recursively check the getter of this muddied property
+                    var nestedGetter = prop.GetGetMethod();
+                    if (nestedGetter != null)
                     {
-                        var nestedGetter = prop.GetGetMethod();
-                        if (nestedGetter != null)
+                        HashSet<string> nestedVisitedMethods = new HashSet<string>();
+                        bool isValid = HasValidReferenceFromMethod(nestedGetter, type, nestedVisitedMethods, prop.Name, out string deeperMuddiedError);
+                        if (!isValid)
                         {
-                            visitedProperties.Add(prop.Name);
-                            if (HasValidReferenceFromMethod(nestedGetter, type, visitedProperties, originalPropertyName))
-                                return true;
+                            muddiedError = deeperMuddiedError; // Pass along the deeper error message
+                            return false;
                         }
                     }
                 }
             }
+
+            // ✅ Check if the method calls other methods that might contain valid references
+            foreach (var calledMethod in GetCalledMethods(method, type))
+            {
+                if (HasValidReferenceFromMethod(calledMethod, type, visitedMethods, originalPropertyName, out string deeperMuddiedError))
+                    return true;
+            }
+
             return false;
         }
+
 
         private static bool ILMethodCallsProperty(MethodInfo method, PropertyInfo property)
         {
@@ -202,6 +261,47 @@ namespace Magic.Flattening.Toolkit.Validation
                 }
             }
             return false;
+        }
+
+        private static List<MethodInfo> GetCalledMethods(MethodInfo method, Type type)
+        {
+            List<MethodInfo> calledMethods = new List<MethodInfo>();
+
+            var ilBytes = method.GetMethodBody()?.GetILAsByteArray();
+            if (ilBytes == null) return calledMethods;
+
+            int position = 0;
+            while (position < ilBytes.Length)
+            {
+                OpCode opcode;
+                byte code = ilBytes[position++];
+                if (code == 0xFE)
+                {
+                    byte second = ilBytes[position++];
+                    opcode = multiByteOpCodes[second];
+                }
+                else
+                {
+                    opcode = singleByteOpCodes[code];
+                }
+
+                if (opcode == OpCodes.Call || opcode == OpCodes.Callvirt)
+                {
+                    int metadataToken = BitConverter.ToInt32(ilBytes, position);
+                    position += 4;
+                    try
+                    {
+                        MemberInfo? member = method.Module.ResolveMember(metadataToken);
+                        if (member is MethodInfo mi && mi.DeclaringType == type)
+                        {
+                            calledMethods.Add(mi);
+                        }
+                    }
+                    catch { }
+                }
+            }
+
+            return calledMethods;
         }
 
         private static List<PropertyInfo> GetAllProperties(Type type)
