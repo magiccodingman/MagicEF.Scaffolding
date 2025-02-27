@@ -39,6 +39,38 @@ $shareViewDtoModelsPath = Join-Path $shareBasePath "ViewDtoModels"
 $shareSharedExtensionsPath = Join-Path $shareBasePath "SharedExtensions"
 $shareSharedMetadataPath = Join-Path $shareBasePath "SharedMetaData"
 
+# Define the Flatten library variables (requires share protocol to be enabled and required variables to be set)
+$flattenNamespace = ""
+
+# Define Flatten library paths (assuming standard protocol unless manually changed)
+$flattenViewDtoDirectoryPath = (Join-Path (Get-Item $modelsDirectory).Parent.Parent.FullName $flattenNamespace)
+
+
+
+
+if (-not [string]::IsNullOrWhiteSpace($shareNamespace)) {
+    # Navigate to the project directory
+    Push-Location $shareBasePath
+
+    try {
+        # Install or update the NuGet package
+        Write-Host "Installing or updating Magic.Flattening.Toolkit in $shareBasePath..."
+        dotnet add package Magic.Flattening.Toolkit --force
+
+        Write-Host "Successfully installed or updated Magic.Flattening.Toolkit."
+    }
+    catch {
+        Write-Host "Error occurred while installing Magic.Flattening.Toolkit: $_" -ForegroundColor Red
+    }
+    finally {
+        # Return to the original directory
+        Pop-Location
+    }
+} else {
+    Write-Host "Skipping installation: flattenNamespace is null, empty, or whitespace."
+}
+
+
 # ---------------------------------------------------------------
 # Install and update MagicEf tool
 dotnet tool install --global MagicEf

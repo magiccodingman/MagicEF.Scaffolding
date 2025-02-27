@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -115,14 +116,17 @@ namespace MagicEf.Scaffold.CommandActions
             string projectDirectoryPath = GetNamespaceDirectory(shareReadOnlyInterfacesPath, shareNamespace);
             var magicReadOnlyPath = Path.Combine(projectDirectoryPath, MagicReadOnlyName);
 
+
+            // no long utilizing created attributes. The use of Magic.Flattening.Toolkit is now enforced.
+
            /* Console.WriteLine($"magic path: {magicReadOnlyPath}");
             return;*/
-            Directory.CreateDirectory(magicReadOnlyPath);
+            //Directory.CreateDirectory(magicReadOnlyPath);
 
-            CreateMagiViewDtoAttribute(shareNamespace, magicReadOnlyPath);
+            /*CreateMagiViewDtoAttribute(shareNamespace, magicReadOnlyPath);
             CreateMagicFlattenRemoveAttribute(shareNamespace, magicReadOnlyPath);
             CreateMagicFlattenInterfaceRemoveAttribute(shareNamespace, magicReadOnlyPath);
-            CreateMagicOrphanAttribute(shareNamespace, magicReadOnlyPath);
+            CreateMagicOrphanAttribute(shareNamespace, magicReadOnlyPath);*/
 
             // Process each filtered model file
             foreach (var modelFile in filteredFiles)
@@ -843,6 +847,7 @@ namespace MagicEf.Scaffold.CommandActions
 
             var sb = new StringBuilder();
             sb.AppendLine("using System.ComponentModel.DataAnnotations;");
+            sb.AppendLine("using Magic.Flattening.Toolkit.Attributes;");
             sb.AppendLine();
             sb.AppendLine($"namespace {shareNamespace}");
             sb.AppendLine("{");
