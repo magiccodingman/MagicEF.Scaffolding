@@ -20,9 +20,14 @@
 		<Copyright>MIT</Copyright>
 		<RepositoryUrl>https://github.com/magiccodingman/MagicEF.Scaffolding</RepositoryUrl>
 		<Version>1.0.16</Version>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Include="..\LICENSE.txt">
+		  <Pack>True</Pack>
+		  <PackagePath>\</PackagePath>
+		</None>
 		<None Include="..\README.md">
 			<Pack>True</Pack>
 			<PackagePath>\</PackagePath>

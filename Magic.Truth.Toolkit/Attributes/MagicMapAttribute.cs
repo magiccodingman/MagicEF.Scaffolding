@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Magic.Flattening.Toolkit.Attributes
+namespace Magic.Truth.Toolkit.Attributes
 {
     /// <summary>
     /// Allows Magic EF to recognize this as a class desired to be part of the flattening share protocol 
     /// which will auto create your flattened DTO without any auto mapping requirements.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-    public sealed class MagicViewDtoAttribute : Attribute
+    public sealed class MagicMapAttribute : Attribute
     {
         public string ProjectName { get => "DataAccess.Primary.Share"; }
         public string? CustomViewDtoName { get; }
@@ -24,7 +24,7 @@ namespace Magic.Flattening.Toolkit.Attributes
         /// <param name="interfaceType">The interface of the end desired connected model (aka the generated ReadOnly interfaces)</param>
         /// <param name="ignoreWhenFlattening">When true, the variable will not be added to the flattened model</param>
         /// <exception cref="ArgumentException"></exception>
-        public MagicViewDtoAttribute(Type interfaceType, bool ignoreWhenFlattening = false)
+        public MagicMapAttribute(Type interfaceType, bool ignoreWhenFlattening = false)
         {
             if (!interfaceType.IsInterface)
                 throw new ArgumentException($"The type '{interfaceType.Name}' must be an interface.", nameof(interfaceType));
@@ -39,7 +39,7 @@ namespace Magic.Flattening.Toolkit.Attributes
         /// <param name="interfaceType">The interface of the end desired connected model (aka the generated ReadOnly interfaces)</param>
         /// <param name="customViewDtoName">The desired flattened view DTO class name</param>
         /// <exception cref="ArgumentException"></exception>
-        public MagicViewDtoAttribute(Type interfaceType, string customViewDtoName)
+        public MagicMapAttribute(Type interfaceType, string customViewDtoName)
         {
             if (!interfaceType.IsInterface)
                 throw new ArgumentException($"The type '{interfaceType.Name}' must be an interface.", nameof(interfaceType));

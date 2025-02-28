@@ -54,13 +54,13 @@ if (-not [string]::IsNullOrWhiteSpace($shareNamespace)) {
 
     try {
         # Install or update the NuGet package
-        Write-Host "Installing or updating Magic.Flattening.Toolkit in $shareBasePath..."
-        dotnet add package Magic.Flattening.Toolkit --force
+        Write-Host "Installing or updating Magic.Truth.Toolkit in $shareBasePath..."
+        dotnet add package Magic.Share.Toolkit --force
 
-        Write-Host "Successfully installed or updated Magic.Flattening.Toolkit."
+        Write-Host "Successfully installed or updated Magic.Truth.Toolkit."
     }
     catch {
-        Write-Host "Error occurred while installing Magic.Flattening.Toolkit: $_" -ForegroundColor Red
+        Write-Host "Error occurred while installing Magic.Truth.Toolkit: $_" -ForegroundColor Red
     }
     finally {
         # Return to the original directory

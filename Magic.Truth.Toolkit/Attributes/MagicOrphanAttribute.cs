@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Magic.Flattening.Toolkit.Attributes
+namespace Magic.Truth.Toolkit.Attributes
 {
     /// <summary>
     /// Purposely orphan this variable, which removes the variable from validation testing

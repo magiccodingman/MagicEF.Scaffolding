@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Flattening.Protocol.Tests.Attributes
 {
-    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
     internal sealed class ShouldPassAttribute : Attribute
     {
         internal bool ShouldPass { get; set; }

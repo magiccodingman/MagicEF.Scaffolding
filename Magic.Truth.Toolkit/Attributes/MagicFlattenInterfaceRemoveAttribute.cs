@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Magic.Flattening.Toolkit.Attributes
+namespace Magic.Truth.Toolkit.Attributes
 {
     /// <summary>
-    /// Removes this variable from being added to the auto generated flat view DTO and the generated interface.
+    /// Removes this variable from being added to the flattened DTO interface that'll be created.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-    public sealed class MagicFlattenRemoveAttribute : Attribute
+    public sealed class MagicFlattenInterfaceRemoveAttribute : Attribute
     {
     }
 }

@@ -1,5 +1,5 @@
 ﻿using Flattening.Protocol.Tests.Attributes;
-using Magic.Flattening.Toolkit.Attributes;
+using Magic.Truth.Toolkit.Attributes;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -15,6 +15,16 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
         public double DumbNumber { get; set; }
     }
 
+    [ShouldPass(true)]
+    [MagicTruth]
+    public interface IGeoLocationDup
+    {
+        public decimal Longitude { get; set; }
+    }
+
+
+    [ShouldPass(true)]
+    [MagicTruth]
     public interface IGeoLocation
     {
         public DummyPoint Location { get; set; }
@@ -27,7 +37,9 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     /// and the "set" involving directly non removed flattened properties.
     /// </summary>
     [ShouldPass(true)]
-    [MagicViewDto(typeof(IGeoLocation))]
+    [MagicMap(typeof(IGeoLocation))]
+    [TruthBindingTest]
+    [MapImpTest]
     public class GeoLocation_Pass1 : IGeoLocation
     {
         public decimal Longitude { get; set; }
@@ -52,7 +64,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     /// A bad "get" but ignored
     /// </summary>
     [ShouldPass(true)]
-    [MagicViewDto(typeof(IGeoLocation))]
+    [MagicMap(typeof(IGeoLocation))]
     public class GeoLocation_Pass2 : IGeoLocation
     {
         public decimal Longitude { get; set; }
@@ -78,7 +90,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     /// A bad "set" but ignored
     /// </summary>
     [ShouldPass(true)]
-    [MagicViewDto(typeof(IGeoLocation))]
+    [MagicMap(typeof(IGeoLocation))]
     public class GeoLocation_Pass3 : IGeoLocation
     {
         public decimal Longitude { get; set; }
@@ -103,7 +115,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     /// A bad "get" and "set" but both "get" and "set" are ignored
     /// </summary>
     [ShouldPass(true)]
-    [MagicViewDto(typeof(IGeoLocation))]
+    [MagicMap(typeof(IGeoLocation))]
     public class GeoLocation_Pass4 : IGeoLocation
     {
         public decimal Longitude { get; set; }
@@ -126,7 +138,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     /// A bad "get" and "set" but the property is ignored
     /// </summary>
     [ShouldPass(true)]
-    [MagicViewDto(typeof(IGeoLocation))]
+    [MagicMap(typeof(IGeoLocation))]
     public class GeoLocation_Pass5 : IGeoLocation
     {
         public decimal Longitude { get; set; }
@@ -149,7 +161,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     /// and the "set" involving indirectly non removed flattened properties.
     /// </summary>
     [ShouldPass(true)]
-    [MagicViewDto(typeof(IGeoLocation))]
+    [MagicMap(typeof(IGeoLocation))]
     public class GeoLocation_Pass6 : IGeoLocation
     {
         public decimal Longitude { get; set; }
@@ -181,7 +193,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     /// and the "set" involving methods which directly and indirectly non removed flattened properties.
     /// </summary>
     [ShouldPass(true)]
-    [MagicViewDto(typeof(IGeoLocation))]
+    [MagicMap(typeof(IGeoLocation))]
     public class GeoLocation_Pass7 : IGeoLocation
     {
         public decimal Longitude { get; set; }
@@ -225,7 +237,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     /// an un-remved flattened property.
     /// </summary>
     [ShouldPass(true)]
-    [MagicViewDto(typeof(IGeoLocation))]
+    [MagicMap(typeof(IGeoLocation))]
     public class GeoLocation_Pass8 : IGeoLocation
     {
         [MagicFlattenRemove]
@@ -261,7 +273,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     /// isn't related to the end IGeoLocation.
     /// </summary>
     [ShouldPass(true)]
-    [MagicViewDto(typeof(IGeoLocation))]
+    [MagicMap(typeof(IGeoLocation))]
     public class GeoLocation_Pass9 : IGeoLocation
     {
         [MagicFlattenRemove]
@@ -289,7 +301,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     /// DummyLongValue muddies the get but properly orphan attributed the problem
     /// </summary>
     [ShouldPass(false)]
-    [MagicViewDto(typeof(IGeoLocation))]
+    [MagicMap(typeof(IGeoLocation))]
     public class GeoLocation_Pass10 : IGeoLocation
     {
         [MagicOrphan]
@@ -317,7 +329,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     /// DummyLongValue muddies the get but properly orphan attributed the problem getter
     /// </summary>
     [ShouldPass(false)]
-    [MagicViewDto(typeof(IGeoLocation))]
+    [MagicMap(typeof(IGeoLocation))]
     public class GeoLocation_Pass11 : IGeoLocation
     {
         
@@ -349,7 +361,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     /// A bad "get" that should fail
     /// </summary>
     [ShouldPass(false)]
-    [MagicViewDto(typeof(IGeoLocation))]
+    [MagicMap(typeof(IGeoLocation))]
     public class GeoLocation_Fail1 : IGeoLocation
     {
         public decimal Longitude { get; set; }
@@ -374,7 +386,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     ///  A bad "set", which should fail.
     /// </summary>
     [ShouldPass(false)]
-    [MagicViewDto(typeof(IGeoLocation))]
+    [MagicMap(typeof(IGeoLocation))]
     public class GeoLocation_Fail2 : IGeoLocation
     {
         public decimal Longitude { get; set; }
@@ -397,7 +409,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     /// A bag "get" and "set" that should fail
     /// </summary>
     [ShouldPass(false)]
-    [MagicViewDto(typeof(IGeoLocation))]
+    [MagicMap(typeof(IGeoLocation))]
     public class GeoLocation_Fail3 : IGeoLocation
     {
         public decimal Longitude { get; set; }
@@ -419,7 +431,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     /// and thus also has no getters or setters
     /// </summary>
     [ShouldPass(false)]
-    [MagicViewDto(typeof(IGeoLocation))]
+    [MagicMap(typeof(IGeoLocation))]
     public class GeoLocation_Fail4 : IGeoLocation
     {
         [MagicFlattenRemove]
@@ -445,7 +457,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     /// DummyLongValue muddies Latitude in the set
     /// </summary>
     [ShouldPass(false)]
-    [MagicViewDto(typeof(IGeoLocation))]
+    [MagicMap(typeof(IGeoLocation))]
     public class GeoLocation_Fail5 : IGeoLocation
     {
         [MagicFlattenRemove]
@@ -473,7 +485,7 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     /// No valid sets
     /// </summary>
     [ShouldPass(false)]
-    [MagicViewDto(typeof(IGeoLocation))]
+    [MagicMap(typeof(IGeoLocation))]
     public class GeoLocation_Fail6 : IGeoLocation
     {
         [MagicFlattenRemove]
@@ -500,8 +512,35 @@ namespace Flattening.Protocol.Tests.ShareDtoTests
     /// DummyLongValue muddies the get
     /// </summary>
     [ShouldPass(false)]
-    [MagicViewDto(typeof(IGeoLocation))]
-    public class GeoLocation_Fail7 : IGeoLocation
+    [MagicMap(typeof(IGeoLocation))]
+    [TruthBindingTest]
+    public class GeoLocation_Fail7 : IGeoLocation, IGeoLocationDup
+    {
+        [MagicFlattenRemove]
+        public decimal DummyLongValue { get; set; }
+
+        public decimal Longitude { get; set; }
+        public decimal Latitude { get; set; }
+
+        [MagicFlattenRemove]
+        public DummyPoint Location
+        {
+            get => new DummyPoint()
+            {
+                DumbNumber = (double)Longitude * (double)DummyLongValue
+            };
+            set
+            {
+                Latitude = (decimal)value.DumbNumber * 4;
+            }
+        }
+    }
+
+
+    [ShouldPass(false)]
+    [MagicMap(typeof(IGeoLocation))]
+    [MapImpTest]
+    public class GeoLocation_Fail8 : IGeoLocationDup
     {
         [MagicFlattenRemove]
         public decimal DummyLongValue { get; set; }

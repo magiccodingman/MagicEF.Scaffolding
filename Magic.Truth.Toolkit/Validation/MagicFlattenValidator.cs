@@ -1,4 +1,4 @@
-﻿using Magic.Flattening.Toolkit.Attributes;
+﻿using Magic.Truth.Toolkit.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,8 +6,9 @@ using System.Reflection.Emit;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Magic.Truth.Toolkit.Models;
 
-namespace Magic.Flattening.Toolkit.Validation
+namespace Magic.Truth.Toolkit.Validation
 {
     public static class MagicFlattenValidator
     {
@@ -30,7 +31,12 @@ namespace Magic.Flattening.Toolkit.Validation
             }
         }
 
-        public static List<(string className, string errorMessage)> ValidateFlattenMappings(string? specificProject = null)
+        /// <summary>
+        /// Validates that the flattened DTO's will not break the truth mapping
+        /// </summary>
+        /// <param name="specificProject"></param>
+        /// <returns></returns>
+        public static List<ValidationResponse> ValidateFlattenMappings(string? specificProject = null)
         {
             var results = new Dictionary<string, string>(); // ✅ Use Dictionary to merge errors per class.
 
@@ -40,12 +46,12 @@ namespace Magic.Flattening.Toolkit.Validation
 
             var typesWithAttribute = assembliesToScan
                 .SelectMany(assembly => SafeGetTypes(assembly))
-                .Where(type => type.GetCustomAttribute<MagicViewDtoAttribute>() != null)
+                .Where(type => type.GetCustomAttribute<MagicMapAttribute>() != null)
                 .ToList();
 
             foreach (var type in typesWithAttribute)
             {
-                var attribute = type.GetCustomAttribute<MagicViewDtoAttribute>();
+                var attribute = type.GetCustomAttribute<MagicMapAttribute>();
                 if (attribute == null) continue;
 
                 if (attribute.IgnoreWhenFlattening)
@@ -54,7 +60,7 @@ namespace Magic.Flattening.Toolkit.Validation
                 var interfaceType = attribute.InterfaceType;
                 if (interfaceType == null)
                 {
-                    AddError(results, type.FullName!, $"{type.Name} has a null InterfaceType in MagicViewDto.");
+                    AddError(results, type.FullName!, $"{type.Name} has a null InterfaceType in MagicMap.");
                     continue;
                 }
 
@@ -94,7 +100,7 @@ namespace Magic.Flattening.Toolkit.Validation
                 }
             }
 
-            return results.Select(kv => (kv.Key, kv.Value)).ToList();
+            return results.Select(kv => new ValidationResponse() { ClassName = kv.Key, ErrorMessage = kv.Value }).ToList();
         }
 
         /// <summary>

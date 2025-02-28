@@ -117,10 +117,10 @@ namespace MagicEf.Scaffold.CommandActions
             var magicReadOnlyPath = Path.Combine(projectDirectoryPath, MagicReadOnlyName);
 
 
-            // no long utilizing created attributes. The use of Magic.Flattening.Toolkit is now enforced.
+            // no long utilizing created attributes. The use of Magic.Truth.Toolkit is now enforced.
 
-           /* Console.WriteLine($"magic path: {magicReadOnlyPath}");
-            return;*/
+            /* Console.WriteLine($"magic path: {magicReadOnlyPath}");
+             return;*/
             //Directory.CreateDirectory(magicReadOnlyPath);
 
             /*CreateMagiViewDtoAttribute(shareNamespace, magicReadOnlyPath);
@@ -179,7 +179,7 @@ namespace MagicEf.Scaffold.CommandActions
     string shareNamespace,
     string magicReadOnlyPath)
         {
-            var fileName = $"MagicViewDtoAttributeReadOnly.cs";
+            var fileName = $"MagicMapAttributeReadOnly.cs";
             var filePath = Path.Combine(magicReadOnlyPath, fileName);
             // Define required usings for this file
             var predefinedUsings = new string[]
@@ -197,7 +197,7 @@ namespace MagicEf.Scaffold.CommandActions
                 sb.AppendLine("    /// which will auto create your flattened DTO without any auto mapping requirements.");
                 sb.AppendLine("    /// </summary>");
                 sb.AppendLine("    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]");
-                sb.AppendLine("    public sealed class MagicViewDtoAttribute : Attribute");
+                sb.AppendLine("    public sealed class MagicMapAttribute : Attribute");
                 sb.AppendLine("    {");
                 sb.AppendLine($"        public string ProjectName {{ get => \"{shareNamespace}\"; }}");
                 sb.AppendLine("        public string? CustomViewDtoName { get; }");
@@ -210,7 +210,7 @@ namespace MagicEf.Scaffold.CommandActions
                 sb.AppendLine("        /// <param name=\"interfaceType\">The interface of the end desired connected model (aka the generated ReadOnly interfaces)</param>");
                 sb.AppendLine("        /// <param name=\"ignoreWhenFlattening\">When true, the variable will not be added to the flattened model</param>");
                 sb.AppendLine("        /// <exception cref=\"ArgumentException\"></exception>");
-                sb.AppendLine($"        public MagicViewDtoAttribute(Type interfaceType, bool ignoreWhenFlattening = false)");
+                sb.AppendLine($"        public MagicMapAttribute(Type interfaceType, bool ignoreWhenFlattening = false)");
                 sb.AppendLine("        {");
                 sb.AppendLine("            if (!interfaceType.IsInterface)");
                 sb.AppendLine("                throw new ArgumentException($\"The type '{interfaceType.Name}' must be an interface.\", nameof(interfaceType));");
@@ -225,7 +225,7 @@ namespace MagicEf.Scaffold.CommandActions
                 sb.AppendLine("        /// <param name=\"interfaceType\">The interface of the end desired connected model (aka the generated ReadOnly interfaces)</param>");
                 sb.AppendLine("        /// <param name=\"customViewDtoName\">The desired flattened view DTO class name</param>");
                 sb.AppendLine("        /// <exception cref=\"ArgumentException\"></exception>");
-                sb.AppendLine($"        public MagicViewDtoAttribute(Type interfaceType, string customViewDtoName)");
+                sb.AppendLine($"        public MagicMapAttribute(Type interfaceType, string customViewDtoName)");
                 sb.AppendLine("        {");
                 sb.AppendLine("            if (!interfaceType.IsInterface)");
                 sb.AppendLine("                throw new ArgumentException($\"The type '{interfaceType.Name}' must be an interface.\", nameof(interfaceType));");
@@ -847,13 +847,13 @@ namespace MagicEf.Scaffold.CommandActions
 
             var sb = new StringBuilder();
             sb.AppendLine("using System.ComponentModel.DataAnnotations;");
-            sb.AppendLine("using Magic.Flattening.Toolkit.Attributes;");
+            sb.AppendLine("using Magic.Truth.Toolkit.Attributes;");
             sb.AppendLine();
             sb.AppendLine($"namespace {shareNamespace}");
             sb.AppendLine("{");
             //sb.AppendLine("    // Mark with [Preserve] to keep it from being stripped in AOT scenarios");
             //sb.AppendLine("    [Preserve]");
-            sb.AppendLine($"    [MagicViewDto(typeof({$"{interfaceName}ReadOnly"}))]");
+            sb.AppendLine($"    [MagicMap(typeof({$"{interfaceName}ReadOnly"}))]");
             sb.AppendLine($"    [MetadataType(typeof({metaDataName}))]");
             sb.AppendLine($"    public partial class {originalName}ViewDto : {originalName}ReadOnly, {interfaceName}");
             sb.AppendLine("    {");
