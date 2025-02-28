@@ -9,6 +9,8 @@ using Microsoft.CodeAnalysis.MSBuild;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Build.Locator;
+using MagicEf.Scaffold.Services;
+using MagicEf.Scaffold.Helpers;
 
 namespace MagicEf.Scaffold.CommandActions
 {
@@ -41,6 +43,7 @@ namespace MagicEf.Scaffold.CommandActions
             "MagicFlattenRemove",
             "MagicFlattenInterfaceRemove",
         };
+        private static RoslynCompilationService sharedProjectCompService { get; set; }
 
         public override void Handle(string[] args)
         {
@@ -65,9 +68,7 @@ namespace MagicEf.Scaffold.CommandActions
                 return;
             }
 
-            InitializeRoslynCompilation(shareProjectDirectory);
-
-            // Build the base output folder: FlattenedReadOnly.
+            sharedProjectCompService = new RoslynCompilationService(shareProjectDirectory);
             string flattenedBaseFolder = Path.Combine(flattenDirectory, "FlattenedReadOnly");
 
             try
@@ -227,16 +228,20 @@ namespace MagicEf.Scaffold.CommandActions
             // Resolve conflicts AFTER merging all `using` statements**
             usings = RemoveConflictingUsings(root, usings);
 
-            // Generate flattened files with merged metadata
             string flattenedClassContent = GenerateFlattenedClassContent(classDeclaration, metadataClassDeclaration, usings, targetNamespace, flattenedName);
-            string flattenedClassFileName = Path.Combine(flattenedViewDtoFolder, $"{flattenedName}ReadOnly.cs");
+            string flattenedClassFileName = Path.Combine(flattenedViewDtoFolder, flattenedName + "ReadOnly.cs");
             File.WriteAllText(flattenedClassFileName, flattenedClassContent);
-            Console.WriteLine($"Created flattened view DTO: {flattenedClassFileName}");
+            Console.WriteLine("Created flattened view DTO: " + flattenedClassFileName);
+
+            string flattenedExtensionInterfaceContent = GenerateFlattenedExtensionInterfaceContent(classDeclaration, metadataClassDeclaration, usings, targetNamespace, flattenedName);
+            string flattenedExtensionInterfaceFileName = Path.Combine(flattenedInterfaceFolder, "I" + flattenedName + "Extension.cs");
+            File.WriteAllText(flattenedExtensionInterfaceFileName, flattenedExtensionInterfaceContent);
+            Console.WriteLine("Created extension flattened interface: " + flattenedExtensionInterfaceFileName);
 
             string flattenedInterfaceContent = GenerateFlattenedInterfaceContent(classDeclaration, metadataClassDeclaration, usings, targetNamespace, flattenedName);
-            string flattenedInterfaceFileName = Path.Combine(flattenedInterfaceFolder, $"I{flattenedName}.cs");
+            string flattenedInterfaceFileName = Path.Combine(flattenedInterfaceFolder, "I" + flattenedName + ".cs");
             File.WriteAllText(flattenedInterfaceFileName, flattenedInterfaceContent);
-            Console.WriteLine($"Created flattened interface: {flattenedInterfaceFileName}");
+            Console.WriteLine("Created flattened interface: " + flattenedInterfaceFileName);
         }
 
         private (string? customViewDtoName, bool ignoreWhenFlattening) GetMagicViewDtoParams(AttributeSyntax magicAttr)
@@ -277,7 +282,7 @@ namespace MagicEf.Scaffold.CommandActions
         }
 
 
-        private ClassDeclarationSyntax GetMetadataClassDeclaration(ClassDeclarationSyntax classDeclaration)
+        private ClassDeclarationSyntax? GetMetadataClassDeclaration(ClassDeclarationSyntax classDeclaration)
         {
             var metadataAttr = GetAttributeSyntax(classDeclaration.AttributeLists, "MetadataType");
 
@@ -287,7 +292,7 @@ namespace MagicEf.Scaffold.CommandActions
                 if (metadataTypeArg is TypeOfExpressionSyntax typeOfExpr)
                 {
                     var metadataTypeName = typeOfExpr.Type.ToString().Split('.').Last();
-                    return FindClassDeclaration(metadataTypeName);
+                    return sharedProjectCompService.GetClassCache().FindClassDeclaration(metadataTypeName);
                 }
             }
             return null;
@@ -324,7 +329,7 @@ namespace MagicEf.Scaffold.CommandActions
                 sb.AppendLine($"    [{attr}]");
             }
 
-            sb.AppendLine($"    public partial class {flattenedName} : I{flattenedName}");
+            sb.AppendLine($"    public partial class {flattenedName} : I{flattenedName}, I{flattenedName}Extension");
             sb.AppendLine("    {");
 
             var properties = GetAllProperties(originalClass, metadataClass);
@@ -476,14 +481,14 @@ namespace MagicEf.Scaffold.CommandActions
                 return null; // Skip built-in types
 
             // First, try resolving via metadata name
-            var typeSymbol = shareProjectCompilation.GetTypeByMetadataName(typeName);
+            var typeSymbol = sharedProjectCompService.GetCompilation().GetTypeByMetadataName(typeName);
             if (typeSymbol != null)
                 return typeSymbol;
 
             // Next, attempt resolution in referenced assemblies
-            foreach (var reference in shareProjectCompilation.References)
+            foreach (var reference in sharedProjectCompService.GetCompilation().References)
             {
-                if (shareProjectCompilation.GetAssemblyOrModuleSymbol(reference) is IAssemblySymbol assemblySymbol)
+                if (sharedProjectCompService.GetCompilation().GetAssemblyOrModuleSymbol(reference) is IAssemblySymbol assemblySymbol)
                 {
                     var foundType = assemblySymbol.GlobalNamespace
                         .GetNamespaceMembers()
@@ -694,16 +699,46 @@ namespace MagicEf.Scaffold.CommandActions
                 foreach (var baseTypeSyntax in baseList)
                 {
                     var baseTypeName = baseTypeSyntax.Type.ToString();
-                    var baseTypeDeclaration = FindClassOrInterfaceDeclaration(baseTypeName);
+                    TypeDeclarationSyntax? baseTypeDeclaration = sharedProjectCompService.FindClassOrInterfaceDeclaration(baseTypeName);
                     if (baseTypeDeclaration != null)
+                    {
                         props.AddRange(GetAllProperties(baseTypeDeclaration));
+                    }
                 }
             }
 
             return props.GroupBy(p => p.Identifier.Text).Select(g => g.First()).ToList();
         }
 
+        private string GenerateFlattenedExtensionInterfaceContent(ClassDeclarationSyntax originalClass, ClassDeclarationSyntax metadataClass, HashSet<string> usings, string targetNamespace, string flattenedName)
+        {
+            var sb = new StringBuilder();
 
+            // Write all unique `using` statements
+            foreach (var u in usings)
+                sb.AppendLine(u);
+
+            sb.AppendLine();
+            string interfaceNamespace = targetNamespace + ".Interfaces";
+            sb.AppendLine($"namespace {interfaceNamespace}");
+            sb.AppendLine("{");
+
+            sb.AppendLine($"    public interface I{flattenedName}Extension");
+            sb.AppendLine("    {");
+
+            foreach (var prop in GetAllProperties(originalClass))
+            {
+                if (HasAttribute(prop.AttributeLists, "MagicFlattenRemove"))
+                    continue; // Skip properties not meant for the interface
+
+                sb.AppendLine($"        {prop.Type} {prop.Identifier.Text} {{ get; set; }}");
+                sb.AppendLine();
+            }
+
+            sb.AppendLine("    }");
+            sb.AppendLine("}");
+            return sb.ToString();
+        }
 
 
         /// <summary>
@@ -846,116 +881,6 @@ namespace MagicEf.Scaffold.CommandActions
 
         #endregion
 
-        private Dictionary<string, ClassDeclarationSyntax> classCache = new();
-        private Dictionary<string, InterfaceDeclarationSyntax> interfaceCache = new();
-        private Compilation shareProjectCompilation;
-
-        // Call this method at the start of your handler to initialize Roslyn Compilation:
-        private void InitializeRoslynCompilation(string shareProjectDirectory)
-        {
-            try
-            {
-                var _ = typeof(Microsoft.CodeAnalysis.CSharp.Formatting.CSharpFormattingOptions);
-
-
-                // 🔹 Ensure MSBuild is properly registered
-                if (!MSBuildLocator.IsRegistered)
-                {
-                    var instances = MSBuildLocator.QueryVisualStudioInstances().ToList();
-
-                    // Choose the most recent version of MSBuild
-                    var instance = instances.OrderByDescending(i => i.Version).FirstOrDefault();
-                    if (instance == null)
-                        throw new InvalidOperationException("No valid MSBuild instances found!");
-
-                    MSBuildLocator.RegisterInstance(instance);
-                    Console.WriteLine($"Registered MSBuild from: {instance.MSBuildPath}");
-                }
-
-                using var workspace = MSBuildWorkspace.Create();
-
-                // 🔹 Find a valid `.csproj` file
-                var csprojFiles = Directory.GetFiles(shareProjectDirectory, "*.csproj", SearchOption.TopDirectoryOnly);
-                if (csprojFiles.Length == 0)
-                {
-                    throw new FileNotFoundException("No .csproj file found in the provided share project directory.");
-                }
-
-                string csprojFile = csprojFiles.FirstOrDefault(f => !f.Contains("Backup", StringComparison.OrdinalIgnoreCase))
-                                    ?? csprojFiles.First();
-
-                Console.WriteLine($"Opening project: {csprojFile}");
-
-                var project = workspace.OpenProjectAsync(csprojFile).GetAwaiter().GetResult();
-                if (project == null)
-                {
-                    throw new Exception($"Failed to open project: {csprojFile}");
-                }
-
-                shareProjectCompilation = project.GetCompilationAsync().GetAwaiter().GetResult();
-                if (shareProjectCompilation == null)
-                {
-                    throw new Exception($"Failed to compile project: {csprojFile}");
-                }
-
-                Console.WriteLine("Successfully loaded project into Roslyn.");
-                CacheProjectDeclarations();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error initializing Roslyn Compilation: {ex.Message}");
-                throw;
-            }
-        }
-
-        private void CacheProjectDeclarations()
-        {
-            foreach (var syntaxTree in shareProjectCompilation.SyntaxTrees)
-            {
-                var root = syntaxTree.GetRoot();
-
-                var classes = root.DescendantNodes().OfType<ClassDeclarationSyntax>();
-                foreach (var classDecl in classes)
-                {
-                    var semanticModel = shareProjectCompilation.GetSemanticModel(syntaxTree);
-                    var symbol = semanticModel.GetDeclaredSymbol(classDecl);
-                    if (symbol != null && !classCache.ContainsKey(symbol.Name))
-                        classCache[symbol.Name] = classDecl;
-                }
-
-                var interfaces = root.DescendantNodes().OfType<InterfaceDeclarationSyntax>();
-                foreach (var interfaceDecl in interfaces)
-                {
-                    var semanticModel = shareProjectCompilation.GetSemanticModel(syntaxTree);
-                    var symbol = semanticModel.GetDeclaredSymbol(interfaceDecl);
-                    if (symbol != null && !interfaceCache.ContainsKey(symbol.Name))
-                        interfaceCache[symbol.Name] = interfaceDecl;
-                }
-            }
-        }
-
-        private ClassDeclarationSyntax FindClassDeclaration(string name)
-        {
-            classCache.TryGetValue(name, out var classDecl);
-            return classDecl;
-        }
-
-        private InterfaceDeclarationSyntax FindInterfaceDeclaration(string name)
-        {
-            interfaceCache.TryGetValue(name, out var interfaceDecl);
-            return interfaceDecl;
-        }
-
-        private TypeDeclarationSyntax FindClassOrInterfaceDeclaration(string name)
-        {
-            var classDecl = FindClassDeclaration(name);
-            if (classDecl != null) return classDecl;
-
-            var interfaceDecl = FindInterfaceDeclaration(name);
-            if (interfaceDecl != null) return interfaceDecl;
-
-            return null;
-        }
 
     }
 }

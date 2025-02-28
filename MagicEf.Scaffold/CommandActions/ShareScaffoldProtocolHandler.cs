@@ -415,11 +415,11 @@ namespace MagicEf.Scaffold.CommandActions
                 shareMetadataClassesPath
             );
 
-            CreateSharedMetaDataClassIfMissing(
+            /*CreateSharedMetaDataClassIfMissing(
                 originalName,
                 shareNamespace,
                 shareSharedMetadataPath
-                );
+                );*/
 
             // 5) Create or recreate the read-only model: {originalName}ReadOnly.cs (internal) from the original minus virtuals
             CreateOrRefreshReadOnlyModel(
@@ -430,11 +430,11 @@ namespace MagicEf.Scaffold.CommandActions
             );
 
             // 6) Create (if missing) the shared extension file: {originalName}SharedExtension.cs
-            CreateSharedExtensionIfMissing(
+            /*CreateSharedExtensionIfMissing(
                 originalName,
                 dbNamespace,
                 shareSharedExtensionsPath
-            );
+            );*/
 
             // 7) Create (if missing) the view DTO: {originalName}ViewDTO.cs
             //    which implements I{originalName}, is partial, has [Preserve], and [MetadataType(...)]
@@ -466,11 +466,11 @@ namespace MagicEf.Scaffold.CommandActions
             if (!string.IsNullOrEmpty(dbExtensionsPath))
             {
                 //shareSharedMetadataPath                
-                TryUpdateDbMetadataFile(
+               /* TryUpdateDbMetadataFile(
                     originalName,
                     shareNamespace,
                     dbMetadataPath!
-                );
+                );*/
             }
 
 
@@ -678,8 +678,7 @@ namespace MagicEf.Scaffold.CommandActions
             string shareNamespace,
             string shareMetadataClassesPath)
         {
-            var metaDataName = $"{originalName}Metadata";
-            var metaDataFile = Path.Combine(shareMetadataClassesPath, $"{metaDataName}.cs");
+            var metaDataFile = Path.Combine(shareMetadataClassesPath, $"{NameBuilder.ShareModelMetaDataExtensionName(originalName)}.cs");
 
             if (File.Exists(metaDataFile))
             {
@@ -691,7 +690,7 @@ namespace MagicEf.Scaffold.CommandActions
             var sb = new StringBuilder();
             sb.AppendLine($"namespace {shareNamespace}");
             sb.AppendLine("{");
-            sb.AppendLine($"    internal class {metaDataName}");
+            sb.AppendLine($"    internal class {NameBuilder.ShareModelMetaDataExtensionName(originalName)}");
             sb.AppendLine("    {");
             sb.AppendLine("    }");
             sb.AppendLine("}");
@@ -704,36 +703,7 @@ namespace MagicEf.Scaffold.CommandActions
 
 
 
-        #region Create Shared {originalName}SharedMetaData.cs if missing
-
-        private void CreateSharedMetaDataClassIfMissing(
-            string originalName,
-            string shareNamespace,
-            string shareSharedMetadataPath)
-        {
-            var metaDataName = $"{originalName}SharedMetadata";
-            var metaDataFile = Path.Combine(shareSharedMetadataPath, $"{metaDataName}.cs");
-
-            if (File.Exists(metaDataFile))
-            {
-                Console.WriteLine($"Metadata class already exists: {metaDataFile} -> Skipping creation");
-                return;
-            }
-
-            // Build the internal metadata class
-            var sb = new StringBuilder();
-            sb.AppendLine($"namespace {shareNamespace}");
-            sb.AppendLine("{");
-            sb.AppendLine($"    public class {metaDataName}");
-            sb.AppendLine("    {");
-            sb.AppendLine("    }");
-            sb.AppendLine("}");
-
-            File.WriteAllText(metaDataFile, sb.ToString());
-            Console.WriteLine($"Created MetaData class: {metaDataFile}");
-        }
-
-        #endregion
+       
 
         #region Step 5: Create/Recreate {originalName}ReadOnly.cs
 
@@ -791,40 +761,7 @@ namespace MagicEf.Scaffold.CommandActions
 
         #endregion
 
-        #region Step 6: Create (if missing) {originalName}SharedExtension.cs
-
-        private void CreateSharedExtensionIfMissing(
-            string originalName,
-            string dbNamespace,
-            string shareSharedExtensionsPath)
-        {
-            var fileName = $"{originalName}SharedExtension.cs";
-            var filePath = Path.Combine(shareSharedExtensionsPath, fileName);
-
-            if (File.Exists(filePath))
-            {
-                Console.WriteLine($"Shared extension already exists: {filePath} -> Skipping creation");
-                return;
-            }
-
-            var sb = new StringBuilder();
-            sb.AppendLine($"namespace {dbNamespace}");
-            sb.AppendLine("{");
-            sb.AppendLine($"    public static class {originalName}SharedExtension");
-            sb.AppendLine("    {");
-            sb.AppendLine($"        //public static [ReturnType] [YourMethod](this I{originalName}ReadOnly _interface)");
-            sb.AppendLine("        //{");
-            sb.AppendLine("        //    // Example usage of extension method on the read-only interface");
-            sb.AppendLine("        //    // return something;");
-            sb.AppendLine("        //}");
-            sb.AppendLine("    }");
-            sb.AppendLine("}");
-
-            File.WriteAllText(filePath, sb.ToString());
-            Console.WriteLine($"Created shared extension: {filePath}");
-        }
-
-        #endregion
+       
 
         #region Step 7: Create (if missing) {originalName}ViewDTO.cs
 
@@ -842,9 +779,6 @@ namespace MagicEf.Scaffold.CommandActions
                 return;
             }
 
-            var metaDataName = $"{originalName}Metadata";
-            var interfaceName = $"I{originalName}";
-
             var sb = new StringBuilder();
             sb.AppendLine("using System.ComponentModel.DataAnnotations;");
             sb.AppendLine("using Magic.Truth.Toolkit.Attributes;");
@@ -853,9 +787,9 @@ namespace MagicEf.Scaffold.CommandActions
             sb.AppendLine("{");
             //sb.AppendLine("    // Mark with [Preserve] to keep it from being stripped in AOT scenarios");
             //sb.AppendLine("    [Preserve]");
-            sb.AppendLine($"    [MagicMap(typeof({$"{interfaceName}ReadOnly"}))]");
-            sb.AppendLine($"    [MetadataType(typeof({metaDataName}))]");
-            sb.AppendLine($"    public partial class {originalName}ViewDto : {originalName}ReadOnly, {interfaceName}");
+            sb.AppendLine($"    {CodeBuilder.MagicMapAttributeCode(originalName)}");
+            sb.AppendLine($"    {CodeBuilder.ShareModelMetaDataExtensionCode(originalName)}");
+            sb.AppendLine($"    public partial class {NameBuilder.ShareModel(originalName)} : {NameBuilder.ShareTruthInterface(originalName)}, {NameBuilder.ShareExtensionInterface(originalName)}");
             sb.AppendLine("    {");
             sb.AppendLine("        // Implement or override any properties beyond the read-only interface here if needed");
             sb.AppendLine("    }");
@@ -869,67 +803,6 @@ namespace MagicEf.Scaffold.CommandActions
 
         #region Step 8: Create (if missing) the mapper profile: {originalName}MapperProfile.cs
 
-        private void CreateMapperProfileIfMissing(
-            string originalName,
-            string shareNamespace,
-            string dbNamespace,
-            string dbMapperPath)
-        {
-            var fileName = $"{originalName}MapperProfile.cs";
-            var filePath = Path.Combine(dbMapperPath, fileName);
-
-            if (File.Exists(filePath))
-            {
-                Console.WriteLine($"Mapper profile already exists: {filePath} -> Skipping creation");
-                return;
-            }
-            string viewDtoName = $"{originalName}ViewDTO";
-            var sb = new StringBuilder();
-            sb.AppendLine("using AutoMapper;");
-            sb.AppendLine($"using {shareNamespace};");
-            sb.AppendLine();
-            sb.AppendLine($"namespace {dbNamespace}");
-            sb.AppendLine("{");
-            sb.AppendLine($"    /// <summary>");
-            sb.AppendLine($"    /// Convert the backend model '{originalName}' to the frontend {viewDtoName}");
-            sb.AppendLine($"    /// </summary>");
-            sb.AppendLine($"    public class {originalName}ToDtoProfile : Profile");
-            sb.AppendLine("    {");
-            sb.AppendLine($"        public {originalName}ToDtoProfile()");
-            sb.AppendLine("        {");
-            sb.AppendLine($"            CreateMap<{originalName}, {viewDtoName}>()");
-            sb.AppendLine("                .IncludeAllDerived(); // Automates mapping for shared interface properties");
-            sb.AppendLine();
-            sb.AppendLine("            // Specific mapping for custom logic can be added here:");
-            sb.AppendLine($"            //CreateMap<{originalName}, {viewDtoName}>()");
-            sb.AppendLine($"            //    .IncludeBase<{originalName}, {viewDtoName}>()");
-            sb.AppendLine("            //    .ForMember(dest => dest.YourField, opt => opt.MapFrom(src => \"Custom Value\"));");
-            sb.AppendLine("        }");
-            sb.AppendLine("    }");
-            sb.AppendLine();
-            sb.AppendLine($"    /// <summary>");
-            sb.AppendLine($"    /// Convert the frontend model '{viewDtoName}' to the backend {originalName}");
-            sb.AppendLine($"    /// </summary>");
-            sb.AppendLine($"    public class DtoTo{originalName}Profile : Profile");
-            sb.AppendLine("    {");
-            sb.AppendLine($"        public DtoTo{originalName}Profile()");
-            sb.AppendLine("        {");
-            sb.AppendLine($"            CreateMap<{originalName}ViewDTO, {originalName}>()");
-            sb.AppendLine("                .IncludeAllDerived(); // Automates mapping for shared interface properties");
-            sb.AppendLine();
-            sb.AppendLine("            // Specific mapping for DTO -> model logic can be added here:");
-            sb.AppendLine($"            //CreateMap<{viewDtoName}, {originalName}>()");
-            sb.AppendLine($"            //    .IncludeBase<{viewDtoName}, {originalName}>()");
-            sb.AppendLine("            //    .ForMember(dest => dest.YourField, opt => opt.MapFrom(src => \"Something\"));");
-            sb.AppendLine("        }");
-            sb.AppendLine("    }");
-            sb.AppendLine("}");
-
-            File.WriteAllText(filePath, sb.ToString());
-            Console.WriteLine($"Created mapper profile: {filePath}");
-        }
-
-        #endregion
 
         #region Step 9 (Optional): Patch the dbExtensions file to include I{originalName}ReadOnly
 
@@ -976,7 +849,6 @@ namespace MagicEf.Scaffold.CommandActions
             }
 
             // 2) Ensure the class declaration includes "I{originalName}ReadOnly" while preserving spacing
-            var interfaceToConnect = $"I{originalName}ReadOnly";
             var classDeclarationIndex = lines.FindIndex(line => line.Contains($"partial class {originalName}"));
 
             if (classDeclarationIndex >= 0)
@@ -985,14 +857,14 @@ namespace MagicEf.Scaffold.CommandActions
                 var originalIndentation = classDeclarationLine.Substring(0, classDeclarationLine.IndexOf("public")).Replace("\t", "    ");
 
                 // Check if the interface is already connected
-                if (!classDeclarationLine.Contains(interfaceToConnect))
+                if (!classDeclarationLine.Contains(NameBuilder.ShareTruthInterface(originalName)))
                 {
                     if (classDeclarationLine.Contains(":"))
                     {
                         // If the class already inherits/implements something, append the interface
                         classDeclarationLine = classDeclarationLine.Insert(
                             classDeclarationLine.LastIndexOf(":") + 1,
-                            $" {interfaceToConnect},"
+                            $" {NameBuilder.ShareTruthInterface(originalName)},"
                         );
                     }
                     else
@@ -1000,7 +872,7 @@ namespace MagicEf.Scaffold.CommandActions
                         // Otherwise, add the colon and interface
                         classDeclarationLine = classDeclarationLine.Replace(
                             $"partial class {originalName}",
-                            $"partial class {originalName} : {interfaceToConnect}"
+                            $"partial class {originalName} : {NameBuilder.ShareTruthInterface(originalName)}"
                         );
                     }
 
@@ -1019,102 +891,7 @@ namespace MagicEf.Scaffold.CommandActions
 
         #endregion
 
-        #region Step 9 (Optional): Patch the dbExtensions file to include I{originalName}ReadOnly
-
-        /// <summary>
-        /// If dbExtensionsPath is provided, this checks the associated extension file
-        /// for the presence of the I{originalName}ReadOnly interface and a using statement for shareNamespace.
-        /// If missing, it injects them safely without overwriting user code.
-        /// </summary>
-        private void TryUpdateDbMetadataFile(
-    string originalName,
-    string shareNamespace,
-    string dbMetadataPath)
-        {
-            var expectedFileName = $"{originalName}ViewDtoMetadata.cs";
-            var metadataFilePath = Path.Combine(dbMetadataPath, expectedFileName);
-
-            if (!File.Exists(metadataFilePath))
-            {
-                Console.WriteLine($"No metadata file found for {originalName} in {dbMetadataPath}. Nothing to patch.");
-                return;
-            }
-
-            // Read the existing file content
-            var code = File.ReadAllText(metadataFilePath);
-
-            // Split the file into lines for safe modifications
-            var lines = code.Split(new[] { Environment.NewLine }, StringSplitOptions.None).ToList();
-
-            // 1) Ensure the "using {shareNamespace};" is present and correctly positioned
-            if (!lines.Any(line => line.Trim() == $"using {shareNamespace};"))
-            {
-                // Find the index after the last existing "using" statement
-                var lastUsingIndex = lines.FindLastIndex(line => line.TrimStart().StartsWith("using "));
-                if (lastUsingIndex >= 0)
-                {
-                    // Insert the new using statement right after the last "using" statement
-                    lines.Insert(lastUsingIndex + 1, $"using {shareNamespace};");
-                }
-                else
-                {
-                    // If no "using" statements exist, add it at the very top
-                    lines.Insert(0, $"using {shareNamespace};");
-                }
-            }
-
-            // 2) Ensure the class declaration includes ": {originalName}SharedMetadata" while preserving spacing
-            var extensionToConnect = $"{originalName}SharedMetadata";
-            var classDeclarationIndex = lines.FindIndex(line => line.Contains($"class {originalName}Metadata"));
-
-            if (classDeclarationIndex >= 0)
-            {
-                var classDeclarationLine = lines[classDeclarationIndex];
-
-                // Extract and preserve the original indentation
-                var originalIndentation = classDeclarationLine.Substring(0, classDeclarationLine.IndexOf("public"));
-
-                // Check if the class already extends/implements the desired metadata
-                if (!classDeclarationLine.Contains(extensionToConnect))
-                {
-                    if (classDeclarationLine.Contains(":"))
-                    {
-                        // If the class already inherits/implements something, append the new extension
-                        var colonIndex = classDeclarationLine.IndexOf(":");
-                        classDeclarationLine = classDeclarationLine.Insert(
-                            colonIndex + 1,
-                            $" {extensionToConnect},"
-                        );
-                    }
-                    else
-                    {
-                        // Otherwise, add the colon and the extension
-                        classDeclarationLine = classDeclarationLine.Replace(
-                            $"class {originalName}Metadata",
-                            $"class {originalName}Metadata : {extensionToConnect}"
-                        );
-                    }
-                }
-
-                // Restore the updated line with the original indentation
-                lines[classDeclarationIndex] = originalIndentation + classDeclarationLine.Trim();
-            }
-
-            // Rebuild the code with the updated lines
-            code = string.Join(Environment.NewLine, lines);
-
-            // Write the updated content back to the file
-            File.WriteAllText(metadataFilePath, code);
-            Console.WriteLine($"Safely updated metadata file: {metadataFilePath}");
-        }
-
-
-
-
-
-
-
-
+        
         #endregion
 
     }

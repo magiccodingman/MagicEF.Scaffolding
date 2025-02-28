@@ -13,4 +13,8 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.13.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Magic.Truth.Toolkit\Magic.Truth.Toolkit.csproj" />
+  </ItemGroup>
+
 </Project>
