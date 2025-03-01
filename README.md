@@ -426,6 +426,10 @@ In this example:
 
 ---
 
+
+# DO NOT USE THE SHARE PROTOCOL RIGHT NOW
+The share protocol has gone through a genuine evolution. Something that wasn't fully expected, but has transformed the protocol in such a way that I do believe it'll have significantly more power and capabilities than the scaffolding project ever expected or foresaw. The share protocol was meant to be an addition, a nice pairing. It has turned into a full fledge protocol that has completely transformed the way I code, develop, and think. I'm excited to share, but major reform is coming. It's very likely that this protocol will become the primary mark and goal of this entire project moving forward.
+
 # **Magic EF: Share Scaffold Protocol**
 ## **Overview**
 The **Magic EF Share Scaffold Protocol** is an advanced, automated scaffolding system designed to generate a reusable **Shared Library** alongside your primary database scaffolded class library. It creates **read-only interfaces, DTO models, mapping profiles, and extension files** that simplify working with database entities across multiple projects.
