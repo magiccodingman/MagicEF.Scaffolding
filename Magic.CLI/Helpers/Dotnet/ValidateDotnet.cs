@@ -16,7 +16,11 @@ namespace Magic.CLI.Helpers.Dotnet
         /// <returns>A MagicCliResponse indicating success or failure.</returns>
         public static async Task<MagicCliResponse> ValidateDotnetAvailabilityAsync()
         {
-            var response = new MagicCliResponse();
+            var response = new MagicCliResponse()
+            {
+                Success = true,
+                Message = "validated dotnet command availability"
+            };
 
             // Check if "dotnet" is available
             if (!await IsCommandAvailableAsync("dotnet --version"))

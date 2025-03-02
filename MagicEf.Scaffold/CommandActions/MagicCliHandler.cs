@@ -1,5 +1,4 @@
-﻿using Magic.CLI.Helpers.Dotnet;
-using Magic.CLI.Models;
+﻿using MagicEf.Scaffold.MagicCli;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,16 +7,23 @@ using System.Threading.Tasks;
 
 namespace MagicEf.Scaffold.CommandActions
 {
-    public class MagicCliHandler : CommandHandlerBase, IAsyncCommandHandler
+    public class MagicCliHandler
     {
-        public override void Handle(string[] args)
-        {
-            _ = HandleAsync(args); // Fire and forget
-        }
-
         public async Task HandleAsync(string[] args)
         {
-            MagicCliResponse response = await ValidateDotnet.ValidateDotnetAvailabilityAsync();
+            try
+            {
+                await new InitialSetup().Initialize();
+
+
+
+
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error has occurred: {ex.InnerException?.Message??ex.Message}");
+            }
         }
     }
 }

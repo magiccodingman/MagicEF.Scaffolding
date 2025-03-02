@@ -9,7 +9,7 @@ namespace MagicEf.Scaffold
 {
     public class CommandDispatcher
     {
-        public void Dispatch(string[] args)
+        public async Task DispatchAsync(string[] args)
         {
             if (args.Length == 0)
             {
@@ -78,7 +78,7 @@ namespace MagicEf.Scaffold
 
                 case "--cli":
                     var magicCliHandler = new MagicCliHandler();
-                    magicCliHandler.Handle(args);
+                    await magicCliHandler.HandleAsync(args);
                     break;
 
                 default:
@@ -90,23 +90,6 @@ namespace MagicEf.Scaffold
 
     public abstract class CommandHandlerBase
     {
-        public virtual void Handle(string[] args)
-        {
-            // Default implementation: Run async handler if it exists
-            if (this is IAsyncCommandHandler asyncHandler)
-            {
-                _ = asyncHandler.HandleAsync(args);
-            }
-            else
-            {
-                throw new NotImplementedException($"{GetType().Name} must override Handle method.");
-            }
-        }
+        public abstract void Handle(string[] args);
     }
-
-    public interface IAsyncCommandHandler
-    {
-        Task HandleAsync(string[] args);
-    }
-
 }
