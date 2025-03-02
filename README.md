@@ -22,6 +22,7 @@ Additional features not discussed in the read me is:
 The Read Me here mostly goes over the primary Magic EF protocol.
 
 ## Prerequisites
+This project works off of NET 8 SDK. Validate this as well if you have issues because maybe I forgot to update this documentation. But the CLI app itself is in NET 8 as of right now and I plan to stick to the newest LTS versions of NET for this project. So install the appropriate NET SDK's to your PC. I may build a self contained released version that I manually package in the future, but that isn't in the works right now.
 
 ### Required Tools
 This project works alongside `dotnet ef dbcontext`. You’ll need to install the following tools:
@@ -425,6 +426,10 @@ In this example:
 
 
 ---
+
+
+# DO NOT USE THE SHARE PROTOCOL RIGHT NOW
+The share protocol has gone through a genuine evolution. Something that wasn't fully expected, but has transformed the protocol in such a way that I do believe it'll have significantly more power and capabilities than the scaffolding project ever expected or foresaw. The share protocol was meant to be an addition, a nice pairing. It has turned into a full fledge protocol that has completely transformed the way I code, develop, and think. I'm excited to share, but major reform is coming. It's very likely that this protocol will become the primary mark and goal of this entire project moving forward.
 
 # **Magic EF: Share Scaffold Protocol**
 ## **Overview**
