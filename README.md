@@ -22,7 +22,7 @@ Additional features not discussed in the read me is:
 The Read Me here mostly goes over the primary Magic EF protocol.
 
 ## Prerequisites
-This project works off of NET 8. Validate this as well if you have issues because maybe I forgot to update this documentation. But the CLI app itself is in NET 8 as of right now and I plan to stick to the newest LTS versions of NET for this project. So install the appropriate NET SDK's to your PC. I may build a self contained released version that I manually package in the future, but that isn't in the works right now.
+This project works off of NET 8 SDK. Validate this as well if you have issues because maybe I forgot to update this documentation. But the CLI app itself is in NET 8 as of right now and I plan to stick to the newest LTS versions of NET for this project. So install the appropriate NET SDK's to your PC. I may build a self contained released version that I manually package in the future, but that isn't in the works right now.
 
 ### Required Tools
 This project works alongside `dotnet ef dbcontext`. You’ll need to install the following tools:
