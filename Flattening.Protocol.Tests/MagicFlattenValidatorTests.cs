@@ -2,7 +2,7 @@
 using Flattening.Protocol.Tests.Helpers;
 using Magic.Truth.Toolkit.Attributes;
 using Magic.Truth.Toolkit.Models;
-using Magic.Truth.Toolkit.Validation;
+using Magic.Truth.Toolkit.Extensions.Validation;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
 using System;
 using System.Collections.Generic;

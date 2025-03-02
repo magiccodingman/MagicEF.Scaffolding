@@ -76,6 +76,11 @@ namespace MagicEf.Scaffold
                     flattenShareProtocolHandler.Handle(args);
                     break;
 
+                case "--cli":
+                    var magicCliHandler = new MagicCliHandler();
+                    magicCliHandler.Handle(args);
+                    break;
+
                 default:
                     Console.WriteLine("Unknown command. Use --help for usage information.");
                     break;
@@ -85,6 +90,23 @@ namespace MagicEf.Scaffold
 
     public abstract class CommandHandlerBase
     {
-        public abstract void Handle(string[] args);
+        public virtual void Handle(string[] args)
+        {
+            // Default implementation: Run async handler if it exists
+            if (this is IAsyncCommandHandler asyncHandler)
+            {
+                _ = asyncHandler.HandleAsync(args);
+            }
+            else
+            {
+                throw new NotImplementedException($"{GetType().Name} must override Handle method.");
+            }
+        }
     }
+
+    public interface IAsyncCommandHandler
+    {
+        Task HandleAsync(string[] args);
+    }
+
 }

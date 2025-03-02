@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Magic.Truth.Toolkit.Extensions\Magic.Truth.Toolkit.Extensions.csproj" />
     <ProjectReference Include="..\Magic.Truth.Toolkit\Magic.Truth.Toolkit.csproj" />
   </ItemGroup>
 

@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Magic.Truth.Toolkit.Models;
 
-namespace Magic.Truth.Toolkit.Validation
+namespace Magic.Truth.Toolkit.Extensions.Validation
 {
     public static class MagicFlattenValidator
     {

@@ -14,7 +14,7 @@ namespace Magic.Truth.Toolkit.Attributes
     public sealed class MagicMapAttribute : Attribute
     {
         public string ProjectName { get => "DataAccess.Primary.Share"; }
-        public string? CustomViewDtoName { get; }
+        public string CustomViewDtoName { get; }
         public bool IgnoreWhenFlattening { get; }
         public Type InterfaceType { get; }
 

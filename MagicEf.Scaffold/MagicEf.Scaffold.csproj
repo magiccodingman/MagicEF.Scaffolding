@@ -14,7 +14,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Magic.CLI\Magic.CLI.csproj" />
     <ProjectReference Include="..\Magic.Truth.Toolkit\Magic.Truth.Toolkit.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="MagicCli\" />
   </ItemGroup>
 
 </Project>
