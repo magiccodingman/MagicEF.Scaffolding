@@ -20,7 +20,7 @@ namespace Magic.GeneralSystem.Toolkit
         /// </summary>
         /// <param name="requiresDotnet">Does the CLI app need to utilize dotnet commands?</param>
         /// <param name="supportedPlatforms">The operating systems your CLI app supports. Leave null for 'any'.</param>
-        public MagicSystemInitialize(bool requiresDotnet, IEnumerable<OSPlatform>? supportedPlatforms)
+        public MagicSystemInitialize(IEnumerable<OSPlatform>? supportedPlatforms, bool requiresDotnet = false)
         {
             RequiresDotnet = requiresDotnet;
             SupportedOperatingSystems = supportedPlatforms?.ToList();
@@ -30,7 +30,7 @@ namespace Magic.GeneralSystem.Toolkit
         /// 
         /// </summary>
         /// <param name="requiresDotnet">Does the CLI app need to utilize dotnet commands?</param>
-        public MagicSystemInitialize(bool requiresDotnet)
+        public MagicSystemInitialize(bool requiresDotnet = false)
         {
             RequiresDotnet = requiresDotnet;
         }
@@ -41,6 +41,7 @@ namespace Magic.GeneralSystem.Toolkit
             {
                 InstalledLocation = await ValidateDotnetToolsAvailability(),
                 OperatingSystem = OperatingSystemHelper.GetOperatingSystem(),
+                RequiresDotnet = this.RequiresDotnet
             };
 
             bool OsSupported = OperatingSystemHelper.ValidateSupportedOs(SupportedOperatingSystems, appConfig.OperatingSystem);

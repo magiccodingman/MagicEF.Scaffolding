@@ -21,7 +21,7 @@ namespace MagicEf.Scaffold.MagicCli
         };
         public async Task<AppConfig> Initialize()
         {
-            AppConfig appConfig = await new MagicSystemInitialize(true, SupportedOperatingSystems).BuildAppConfig();
+            AppConfig appConfig = await new MagicSystemInitialize(SupportedOperatingSystems, true).BuildAppConfig();
             return appConfig;
         }
     }

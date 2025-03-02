@@ -11,6 +11,49 @@ namespace Magic.GeneralSystem.Toolkit.Helpers
 {
     public static class DirectoryHelper
     {
+        /// <summary>
+        /// Extremely efficient method of returning all the directories that can be found recursively. 
+        /// Method utilizes sharded model for returned paths to prevent memory overflow in case of 
+        /// extreme scenarios of grabbing all paths within deeply nested large starting points.
+        /// </summary>
+        /// <param name="directoryPath"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="DirectoryNotFoundException"></exception>
+        public static DirectoryShard GetAllDirectoriesSharded(string directoryPath)
+        {
+            if (string.IsNullOrWhiteSpace(directoryPath))
+                throw new ArgumentException("Directory path cannot be null or empty.", nameof(directoryPath));
+
+            directoryPath = Path.GetFullPath(directoryPath);
+
+            if (!Directory.Exists(directoryPath))
+                throw new DirectoryNotFoundException($"The specified directory does not exist: {directoryPath}");
+
+            // Now the root DirectoryShard **includes** the provided directory itself
+            DirectoryShard root = new DirectoryShard(directoryPath);
+            PopulateSubdirectories(directoryPath, root);
+
+            return root;
+        }
+
+        private static void PopulateSubdirectories(string currentPath, DirectoryShard currentNode)
+        {
+            try
+            {
+                foreach (var dir in Directory.GetDirectories(currentPath))
+                {
+                    var subDir = new DirectoryShard(dir);
+                    currentNode.AddSubdirectory(subDir);
+                    PopulateSubdirectories(dir, subDir);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new IOException($"Error while accessing directories: {currentPath}", ex);
+            }
+        }
+
         public static List<MagicFile> GetFilesAsMagicFiles(string directoryPath)
         {
             if (string.IsNullOrWhiteSpace(directoryPath))

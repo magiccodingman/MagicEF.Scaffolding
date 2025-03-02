@@ -14,12 +14,14 @@ namespace Magic.GeneralSystem.Toolkit
         private readonly string _normalizedPath;
         private readonly bool _isUNCPath;
 
+        public List<string> Folders { get; set; } = new List<string>();
 
-        public List<MagicFile> Files { get; private set; }
+        public List<MagicFile> Files { get; set; } = new List<MagicFile>();
 
         public string FullPath => _normalizedPath;
 
-        public readonly Permissions Permissions;
+        public Permissions Permissions { get; set; }
+
         /// <summary>
         /// 
         /// </summary>
@@ -38,9 +40,6 @@ namespace Magic.GeneralSystem.Toolkit
 
             if (throwErrorIfNotExists && !Directory.Exists(_normalizedPath))
                 throw new DirectoryNotFoundException($"Directory does not exist: {_originalPath}");
-
-            Permissions = DirectoryHelper.GetPermissions(FullPath);
-            Files = DirectoryHelper.GetFilesAsMagicFiles(FullPath);
         }
 
         private bool DetectUNCPath(string path)
@@ -54,6 +53,11 @@ namespace Magic.GeneralSystem.Toolkit
             char preferredSlash = useBackslashes ? '\\' : '/';
             char otherSlash = useBackslashes ? '/' : '\\';
             return path.Replace(otherSlash, preferredSlash);
+        }
+
+        public string GetFullFilePath(MagicFile magicFile)
+        {
+            return NormalizePath(Path.Combine(FullPath, magicFile.FullFileName), _isUNCPath);
         }
 
         private string EnsureDirectoryOnly(string path)

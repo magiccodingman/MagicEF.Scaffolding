@@ -1,4 +1,5 @@
-﻿using MagicEf.Scaffold.MagicCli;
+﻿using Magic.GeneralSystem.Toolkit;
+using MagicEf.Scaffold.MagicCli;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace MagicEf.Scaffold.CommandActions
         {
             try
             {
-                await new InitialSetup().Initialize();
+                AppConfig appConfig = await new InitialSetup().Initialize();
 
 
 

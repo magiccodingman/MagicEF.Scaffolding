@@ -13,41 +13,46 @@ namespace Magic.GeneralSystem.Toolkit
             if (string.IsNullOrWhiteSpace(filePath))
                 throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
 
-            string fileName = Path.GetFileName(filePath.Trim());
+            // Extract file name from path
+            FullFileName = Path.GetFileName(filePath.Trim());
 
-            if (string.IsNullOrWhiteSpace(fileName))
+            if (string.IsNullOrWhiteSpace(FullFileName))
                 throw new ArgumentException("Invalid file path, unable to extract file name.", nameof(filePath));
-
-            // Extract last extension
-            int lastDotIndex = fileName.LastIndexOf('.');
-            if (lastDotIndex > 0)
-            {
-                Name = fileName.Substring(0, lastDotIndex); // Everything before the last dot
-                Extension = fileName.Substring(lastDotIndex + 1); // Everything after the last dot
-            }
-            else
-            {
-                Name = fileName; // No extension found
-                Extension = string.Empty;
-            }
-
-            Name = Name.Trim();
-            Extension = Extension.Trim();
         }
 
-        public string GetFullFileName()
+        /// <summary>
+        /// The full file name with extension (e.g., "document.txt").
+        /// </summary>
+        public string FullFileName { get; }
+
+        public string GetFullPath(MagicDirectory magicDirectory)
         {
-            return string.IsNullOrWhiteSpace(Extension) ? Name : $"{Name}.{Extension}";
+            return magicDirectory.GetFullFilePath(this);
         }
 
         /// <summary>
-        /// The name without the extension
+        /// The name without the extension.
         /// </summary>
-        public string Name { get; set; }
+        public string Name
+        {
+            get
+            {
+                int lastDotIndex = FullFileName.LastIndexOf('.');
+                return lastDotIndex > 0 ? FullFileName.Substring(0, lastDotIndex) : FullFileName;
+            }
+        }
 
         /// <summary>
-        /// The extension of the file without the period
+        /// The extension of the file without the period.
         /// </summary>
-        public string Extension { get; set; }
+        public string Extension
+        {
+            get
+            {
+                int lastDotIndex = FullFileName.LastIndexOf('.');
+                return lastDotIndex > 0 ? FullFileName.Substring(lastDotIndex + 1) : string.Empty;
+            }
+        }
     }
+
 }
