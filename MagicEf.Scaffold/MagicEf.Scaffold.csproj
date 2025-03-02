@@ -14,8 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Magic.Cli.Toolkit\Magic.Cli.Toolkit.csproj" />
-    <ProjectReference Include="..\Magic.System.Toolkit\Magic.GeneralSystem.Toolkit.csproj" />
     <ProjectReference Include="..\Magic.Truth.Toolkit\Magic.Truth.Toolkit.csproj" />
   </ItemGroup>
 
