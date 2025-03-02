@@ -101,7 +101,13 @@ namespace MagicEf.Scaffold.CommandActions
                 {
                     try
                     {
-                        ProcessViewDtoFile(file, targetNamespace, flattenedViewDtoFolder, flattenedInterfaceFolder);
+                        string? flatName = ProcessViewDtoFile(file, targetNamespace, flattenedViewDtoFolder, flattenedInterfaceFolder);
+
+                        if(!string.IsNullOrWhiteSpace(flatName))
+                        {
+
+                        }
+
                     }
                     catch (Exception ex)
                     {
@@ -175,7 +181,7 @@ namespace MagicEf.Scaffold.CommandActions
         ///  - Determines the “flattened” class name (using any CustomViewDtoName provided via the attribute).
         ///  - Generates two files: a flattened view DTO file and the corresponding interface file.
         /// </summary>
-        private void ProcessViewDtoFile(string filePath, string targetNamespace, string flattenedViewDtoFolder, string flattenedInterfaceFolder)
+        private string? ProcessViewDtoFile(string filePath, string targetNamespace, string flattenedViewDtoFolder, string flattenedInterfaceFolder)
         {
             Console.WriteLine($"Processing file: {filePath}");
             var originalCode = File.ReadAllText(filePath);
@@ -191,7 +197,7 @@ namespace MagicEf.Scaffold.CommandActions
             if (classDeclaration == null)
             {
                 Console.WriteLine($"No class with [MagicViewDto] found in {filePath}. Skipping...");
-                return;
+                return null;
             }
 
             string originalClassName = classDeclaration.Identifier.Text;
@@ -210,7 +216,7 @@ namespace MagicEf.Scaffold.CommandActions
                 if (ignoreWhenFlattening)
                 {
                     Console.WriteLine($"Skipping {filePath} because IgnoreWhenFlattening = true.");
-                    return;
+                    return null;
                 }
             }
 
@@ -242,6 +248,8 @@ namespace MagicEf.Scaffold.CommandActions
             string flattenedInterfaceFileName = Path.Combine(flattenedInterfaceFolder, "I" + flattenedName + ".cs");
             File.WriteAllText(flattenedInterfaceFileName, flattenedInterfaceContent);
             Console.WriteLine("Created flattened interface: " + flattenedInterfaceFileName);
+
+            return flattenedName;
         }
 
         private (string? customViewDtoName, bool ignoreWhenFlattening) GetMagicViewDtoParams(AttributeSyntax magicAttr)
