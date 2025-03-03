@@ -67,8 +67,10 @@ namespace MagicEf.Scaffold.Settings
             if (!string.IsNullOrWhiteSpace(path)
                     && DirectoryHelper.IsFullPath(path))
                 return path;
-            else
+            else if (!string.IsNullOrWhiteSpace(path))
                 return DirectoryHelper.GetResolvedPath(FullDirectoryPath, path);
+
+            return FullDirectoryPath;
         }
     }
 }
