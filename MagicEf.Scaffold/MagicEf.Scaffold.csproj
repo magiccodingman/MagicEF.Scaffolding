@@ -11,9 +11,16 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.13.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.13.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="9.0.2" />
+    <PackageReference Include="MySql.Data" Version="9.2.0" />
+    <PackageReference Include="Npgsql" Version="9.0.3" />
+    <PackageReference Include="Oracle.ManagedDataAccess" Version="23.7.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Magic.Toolkits\Magic.Cli.Toolkit\Magic.Cli.Toolkit.csproj" />
+    <ProjectReference Include="..\..\..\Magic.Toolkits\Magic.GeneralSystem.Toolkit\Magic.GeneralSystem.Toolkit.csproj" />
     <ProjectReference Include="..\Magic.Truth.Toolkit\Magic.Truth.Toolkit.csproj" />
   </ItemGroup>
 
