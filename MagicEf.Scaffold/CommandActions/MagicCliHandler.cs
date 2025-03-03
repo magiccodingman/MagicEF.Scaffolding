@@ -74,7 +74,7 @@ namespace MagicEf.Scaffold.CommandActions
             {
                 menu.AddOption(profile.Name, async () => await SelectProfile(profile));
             }
-            menu.AddOption("Add Profile", async () => await SelectProfile(new ProjectProfile()));
+            menu.AddOption("Add Profile", async () => await CreateNewProfile(new ProjectProfile()));
             menu.AddOption("Go back to 'Main Menu'", async () => await MainMenu());
 
             await menu.ShowAsync();
@@ -82,7 +82,7 @@ namespace MagicEf.Scaffold.CommandActions
 
         private async Task SelectProfile(ProjectProfile profile)
         {
-            if (profile.HasCompletedBasicConfiguration == false)
+            if (profile.ProjectSpecificSettings.HasCompletedBasicConfiguration == false)
             {
                 await CreateNewProfile(profile);
             }
@@ -152,6 +152,9 @@ namespace MagicEf.Scaffold.CommandActions
 
         private async Task CreateNewProfile(ProjectProfile profile)
         {
+            if (string.IsNullOrWhiteSpace(profile.PrimaryProjectPath))
+                await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.PrimaryProjectPath);
+
             string dbFirstDescription = "Database first Scaffold - runs the 'scaffoldProtocol' for database first projects. " +
                 "Fixes commonplace errors while additionally scaffolding extensions, concrete classes, and powerful " +
                 "LINQ to SQL repositories.";
@@ -180,16 +183,16 @@ Profile Name (REQUIRED) - The name you'd like to give this profile.
             menu.AddOption($"Profile Name (Set to '{profile.Name??"REQUIRED TO SET"}')",
                 async () => await SetProfileSetting(false, CreateNewProfile, profile, x => x.Name));
 
-            menu.AddOption($"{GetCheckbox(profile.RunDatabaseFirstScaffolding)} Database first Scaffold",
-                async () => await SetProfileSetting(false, CreateNewProfile, profile, x => x.RunDatabaseFirstScaffolding));
+            menu.AddOption($"{GetCheckbox(profile.ProjectSpecificSettings.RunDatabaseFirstScaffolding)} Database first Scaffold",
+                async () => await SetProfileSetting(false, CreateNewProfile, profile, x => x.ProjectSpecificSettings.RunDatabaseFirstScaffolding));
 
-            menu.AddOption($"{GetCheckbox(profile.RunShareProtocol)} Share (Truth) Protocol",
-                async () => await SetProfileSetting(false, CreateNewProfile, profile, x => x.RunShareProtocol));
+            menu.AddOption($"{GetCheckbox(profile.ProjectSpecificSettings.RunShareProtocol)} Share (Truth) Protocol",
+                async () => await SetProfileSetting(false, CreateNewProfile, profile, x => x.ProjectSpecificSettings.RunShareProtocol));
 
-            if (profile.RunShareProtocol)
+            if (profile.ProjectSpecificSettings.RunShareProtocol)
             {
-                menu.AddOption($"{GetCheckbox(profile.RunFlatteningProtocol)} Flatten Protocol",
-                    async () => await SetProfileSetting(false, CreateNewProfile, profile, x => x.RunFlatteningProtocol));
+                menu.AddOption($"{GetCheckbox(profile.ProjectSpecificSettings.RunFlatteningProtocol)} Flatten Protocol",
+                    async () => await SetProfileSetting(false, CreateNewProfile, profile, x => x.ProjectSpecificSettings.RunFlatteningProtocol));
             }
             else
             {
@@ -199,9 +202,9 @@ Profile Name (REQUIRED) - The name you'd like to give this profile.
 
             if (!string.IsNullOrWhiteSpace(profile.Name) &&
                 (
-                profile.RunDatabaseFirstScaffolding == true
-                || profile.RunShareProtocol == true
-                || profile.RunFlatteningProtocol == true
+                profile.ProjectSpecificSettings.RunDatabaseFirstScaffolding == true
+                || profile.ProjectSpecificSettings.RunShareProtocol == true
+                || profile.ProjectSpecificSettings.RunFlatteningProtocol == true
                 ))
             {
                 menu.AddOption($"SAVE PROFILE",
@@ -214,7 +217,7 @@ Profile Name (REQUIRED) - The name you'd like to give this profile.
 
         private async Task SaveNewProfile(ProjectProfile profile)
         {
-            profile.HasCompletedBasicConfiguration = true;
+            profile.ProjectSpecificSettings.HasCompletedBasicConfiguration = true;
             generalSettings.projectProfiles.Add(profile);
             generalSettings.Save();
             await ProjectProfileMenu();
@@ -228,7 +231,7 @@ Profile Name (REQUIRED) - The name you'd like to give this profile.
 
         public async Task SetRequiredPrimary(ProjectProfile profile)
         {
-            if (profile.RunDatabaseFirstScaffolding == true)
+            if (profile.ProjectSpecificSettings.RunDatabaseFirstScaffolding == true)
             {
                 if (string.IsNullOrWhiteSpace(profile.PrimaryProjectPath)
                     || !appConfig.FileSystem.DirectoryExists(profile.PrimaryProjectPath))
@@ -236,20 +239,20 @@ Profile Name (REQUIRED) - The name you'd like to give this profile.
                     await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.PrimaryProjectPath);
                 }
 
-                if (profile.RunSeparateVirtualProperties == null)
+                if (profile.ProjectSpecificSettings.RunSeparateVirtualProperties == null)
                 {
-                    await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.RunSeparateVirtualProperties);
-                    await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.SeparateVirtualPropertiesPath);
+                    await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.ProjectSpecificSettings.RunSeparateVirtualProperties);
+                    await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.ProjectSpecificSettings.SeparateVirtualPropertiesPath);
                 }
                 else
                 {
                     if (!string.IsNullOrWhiteSpace(profile.PrimaryProjectPath)
                     && !appConfig.FileSystem.DirectoryExists(profile.PrimaryProjectPath))
-                        await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.SeparateVirtualPropertiesPath);
+                        await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.ProjectSpecificSettings.SeparateVirtualPropertiesPath);
                 }
             }
 
-            if (profile.RunDatabaseFirstScaffolding == true)
+            if (profile.ProjectSpecificSettings.RunDatabaseFirstScaffolding == true)
             {
                 while (true)
                 {
@@ -297,24 +300,24 @@ Profile Name (REQUIRED) - The name you'd like to give this profile.
                     else
                     {
                         break;
-                    }    
+                    }
                 }
             }
 
-            if (profile.RunShareProtocol == true)
+            if (profile.ProjectSpecificSettings.RunShareProtocol == true)
             {
-                if (string.IsNullOrWhiteSpace(profile.ShareProjectPath)
-                    || !appConfig.FileSystem.DirectoryExists(profile.ShareProjectPath))
+                if (string.IsNullOrWhiteSpace(profile.ProjectSpecificSettings.ShareProjectPath)
+                    || !appConfig.FileSystem.DirectoryExists(profile.ProjectSpecificSettings.ShareProjectPath))
                 {
-                    await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.ShareProjectPath);
+                    await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.ProjectSpecificSettings.ShareProjectPath);
                 }
             }
-            if (profile.RunFlatteningProtocol == true)
+            if (profile.ProjectSpecificSettings.RunFlatteningProtocol == true)
             {
-                if (string.IsNullOrWhiteSpace(profile.FlattenProjectPath)
-                    || !appConfig.FileSystem.DirectoryExists(profile.FlattenProjectPath))
+                if (string.IsNullOrWhiteSpace(profile.ProjectSpecificSettings.FlattenProjectPath)
+                    || !appConfig.FileSystem.DirectoryExists(profile.ProjectSpecificSettings.FlattenProjectPath))
                 {
-                    await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.FlattenProjectPath);
+                    await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.ProjectSpecificSettings.FlattenProjectPath);
                 }
             }
         }
@@ -322,10 +325,10 @@ Profile Name (REQUIRED) - The name you'd like to give this profile.
 
 
         private async Task SetProfileSetting<TProperty>(
-            bool ImmediateSave,
-    Func<ProjectProfile, Task>? action,  // Action to execute, if provided
-    ProjectProfile profile,              // The profile being modified
-    Expression<Func<ProjectProfile, TProperty>> propertyExpression)
+bool ImmediateSave,
+Func<ProjectProfile, Task>? action,  // Action to execute, if provided
+ProjectProfile profile,              // The profile being modified
+Expression<Func<ProjectProfile, TProperty>> propertyExpression)
         {
             // Get the name and description dynamically
             var (name, description) = MagicSettingHelper.GetMagicSettingInfo(propertyExpression);
@@ -335,8 +338,52 @@ Profile Name (REQUIRED) - The name you'd like to give this profile.
             Console.WriteLine(description);
             Console.WriteLine();
 
-            // Read and parse user input safely
-            TProperty newValue = MagicSettingHelper.ReadUserInput<TProperty>(name);
+            TProperty newValue;
+            string? path = null;
+
+            // Special handling for "PrimaryProjectPath"
+            if (propertyExpression.Body is MemberExpression memberExpression &&
+                memberExpression.Member.Name == nameof(ProjectProfile.PrimaryProjectPath) &&
+                typeof(TProperty) == typeof(string))
+            {
+                while (true) // Loop until a valid input or override
+                {
+                    path = MagicSettingHelper.ReadUserInput<string>(name);
+
+                    if (!Directory.Exists(path))
+                    {
+                        Console.WriteLine("Error: The provided path does not exist. Please enter a valid directory.");
+                        continue; // Prompt user again
+                    }
+
+                    bool hasCsproj = Directory.EnumerateFiles(path, "*.csproj", SearchOption.TopDirectoryOnly).Any();
+
+                    if (hasCsproj)
+                    {
+                        break; // Proceed with setting the property
+                    }
+
+                    Console.WriteLine("Warning: No .csproj file was found in the provided directory.");
+                    Console.WriteLine("Type 'override' to proceed anyway, or 'try again' to enter a different path.");
+
+                    string response = Console.ReadLine()?.Trim().ToLower() ?? string.Empty;
+                    if (response == "override")
+                    {
+                        break; // Allow user to continue with the provided path
+                    }
+                    else if (response == "try again")
+                    {
+                        continue; // Loop to prompt user again
+                    }
+                }
+
+                newValue = (TProperty)(object)path!;
+            }
+            else
+            {
+                // Read and parse user input safely for other properties
+                newValue = MagicSettingHelper.ReadUserInput<TProperty>(name);
+            }
 
             // Set the property dynamically
             MagicSettingHelper.SetPropertyValue(profile, propertyExpression, newValue);
@@ -351,6 +398,7 @@ Profile Name (REQUIRED) - The name you'd like to give this profile.
                 await action(profile);
             }
         }
+
 
         private async Task GeneralSettings()
         {

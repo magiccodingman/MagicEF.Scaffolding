@@ -3,12 +3,39 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace MagicEf.Scaffold.Settings
 {
     public class ProjectProfile
     {
+        public const string SuggestedRelativeDesc = "It's highly suggested you utilize a relative path starting from where your primary project path is located (eg. '.\\' or '..\\..\\').";
+        //private readonly string ProjectPath;
+        public static readonly string ProjectSettingsName = "MagicProfile";
+        //public ProjectSettings ProjectSpecificSettings;
+        [JsonIgnore]
+        private ProjectSettings? _projectSpecificSettings { get; set; }
+
+        [JsonIgnore]
+        public ProjectSettings ProjectSpecificSettings
+        {
+            get
+            {
+                if (_projectSpecificSettings == null)
+                {
+                    _projectSpecificSettings = new ProjectSettings(PrimaryProjectPath, ProjectSettingsName);
+                }
+                return _projectSpecificSettings;
+            }
+            set => _projectSpecificSettings = value;
+        }
+
+        public ProjectProfile()
+        {
+            //ProjectPath = projectPath;
+            //ProjectSpecificSettings = new ProjectSettings(ProjectPath, ProjectSettingsName);
+        }
         [MagicSettingEncrypt]
         [MagicSettingInfo("Database Connection String", "This is securely encrypted in the settings file with the password you created at the app launch.")]
         public string? DatabaseConnectionString { get; set; }
@@ -17,34 +44,7 @@ namespace MagicEf.Scaffold.Settings
         [MagicSettingInfo("Profile Name", "The name of the profile")]
         public string Name { get; set; }
 
-        public bool HasCompletedBasicConfiguration { get; set; } = false;
-
-        #region Database First Scaffolding
-        [MagicSettingInfo("Db First Scaffolding", "Run Magic EF's database first scaffolding for database first configurations.")]
-        public bool RunDatabaseFirstScaffolding { get; set; } = false;
-
-        [MagicSettingInfo("Separate Virtual Properties", "When running the Db first scaffolding, you can choose to separate out the virtual properties for a cleaner GIT history experience.")]
-        public bool? RunSeparateVirtualProperties { get; set; }
-
-        [MagicSettingInfo("Separate Virtual Properties Path", "The directory Where you would like to place the separated virtual properties from the scaffolded classes. You may leave this empty if you want it to stay in the same folder as your scaffolded database class models.")]
-        public string? SeparateVirtualPropertiesPath { get; set; }
-
-        #endregion
-
-
-        [MagicSettingInfo("Share (Truth) Protocol", "Run Magic EF's share (truth) protocol scaffolding")]
-        public bool RunShareProtocol { get; set; } = false;
-
-        [MagicSettingInfo("Flattening Protocol", "Run Magic EF's flattening protocol scaffolding")]
-        public bool RunFlatteningProtocol { get; set; } = false;
-
-        [MagicSettingInfo("Db First Scaffolding Path", "The directory path where your project directory resides where the database first scaffolding will occur.")]
+        [MagicSettingInfo("Primary Project Directory", "Full path location to the primary project where your Csharp models live. Whether the models are custom, database first scaffolded, code first, or any other models reside. This will also be where your commands will run relative pathing.")]
         public string PrimaryProjectPath { get; set; }
-
-        [MagicSettingInfo("Share (Truth) Protocol Path", "The directory path where your project directory resides where your share protocol scaffolding will occur.")]
-        public string ShareProjectPath { get; set; }
-
-        [MagicSettingInfo("Flattening Protocol", "The directory path where your project directory resides where your flattening protocol scaffolding will occur.")]
-        public string FlattenProjectPath { get; set; }
     }
 }
