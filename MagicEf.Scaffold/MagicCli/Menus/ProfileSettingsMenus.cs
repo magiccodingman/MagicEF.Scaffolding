@@ -464,13 +464,13 @@ Expression<Func<ProjectProfile, TProperty>> propertyExpression)
             }
 
             // Set the property dynamically
-            var _profile = generalSettings.projectProfiles.FirstOrDefault(x => x.ProjectSpecificSettings.Id == profile.ProjectSpecificSettings.Id);
+            var _profile = _generalSettings.projectProfiles.FirstOrDefault(x => x.ProjectSpecificSettings.Id == profile.ProjectSpecificSettings.Id);
             MagicSettingHelper.SetPropertyValue(_profile, propertyExpression, newValue);
 
 
             // Save settings
             if (ImmediateSave)
-                generalSettings.Save();
+                _generalSettings.Save();
 
             // Execute the provided action with the modified profile
             if (action != null)
