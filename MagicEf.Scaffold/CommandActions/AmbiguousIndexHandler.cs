@@ -20,7 +20,7 @@ namespace MagicEf.Scaffold.CommandActions
             }
             else if (!string.IsNullOrEmpty(directoryPath))
             {
-                foreach (var csFile in FileHelper.GetCsFiles(directoryPath))
+                foreach (var csFile in ScaffoldFileHelper.GetCsFiles(directoryPath))
                 {
                     ProcessFile(csFile);
                 }
@@ -33,7 +33,7 @@ namespace MagicEf.Scaffold.CommandActions
 
         private void ProcessFile(string filePath)
         {
-            var code = FileHelper.ReadFile(filePath);
+            var code = ScaffoldFileHelper.ReadFile(filePath);
             var root = RoslynHelper.ParseCode(code);
 
             var rewriter = new IndexRewriter();
@@ -41,7 +41,7 @@ namespace MagicEf.Scaffold.CommandActions
 
             if (rewriter.ChangesMade)
             {
-                FileHelper.WriteFile(filePath, newRoot.ToFullString());
+                ScaffoldFileHelper.WriteFile(filePath, newRoot.ToFullString());
                 Console.WriteLine($"Updated file: {filePath}");
             }
             else

@@ -17,7 +17,7 @@ namespace MagicEf.Scaffold.CommandActions
         {
             Console.WriteLine("Starting MigrationRunnerHandler...");
 
-            string? projectFilePath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--projectFilePath"));
+            string? projectFilePath = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--projectFilePath"));
             string? _namespace = ArgumentHelper.GetArgumentValue(args, "--namespace");
 
             if (string.IsNullOrEmpty(projectFilePath))

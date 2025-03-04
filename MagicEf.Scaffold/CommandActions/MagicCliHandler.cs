@@ -21,7 +21,22 @@ namespace MagicEf.Scaffold.CommandActions
     public partial class MagicCliHandler
     {
         private AppConfig appConfig;
-        GeneralCliSettings generalSettings;
+        private static GeneralCliSettings? _instance;
+
+        public static GeneralCliSettings generalSettings
+        {
+            get
+            {
+                if (_instance == null)
+                    throw new InvalidOperationException("GeneralSettings has not been initialized.");
+                return _instance;
+            }
+            private set
+            {
+                _instance = value;
+            }
+        }
+
         public async Task HandleAsync(string[] args)
         {
             try

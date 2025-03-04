@@ -14,13 +14,13 @@ namespace MagicEf.Scaffold.CommandActions
         {
             // Parse required arguments
             
-            string? concretePath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--concretePath"));
-            string? modelPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--modelPath"));
-            string? extensionPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--extensionPath"));
-            string? metaDataPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--metadataPath"));
-            string? interfacesPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--interfacesPath"));
+            string? concretePath = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--concretePath"));
+            string? modelPath = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--modelPath"));
+            string? extensionPath = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--extensionPath"));
+            string? metaDataPath = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--metadataPath"));
+            string? interfacesPath = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--interfacesPath"));
             // string dbHelpersPath = ArgumentHelper.GetArgumentValue(args, "--dbHelpersPath");
-            string? projectFilePath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--projectFilePath"));
+            string? projectFilePath = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--projectFilePath"));
 
             // Check that all required arguments are present
             if (
@@ -72,7 +72,7 @@ namespace MagicEf.Scaffold.CommandActions
         private void ProcessModelFile(string modelFilePath, string projectNamespaceName, string interfacesPath, string metaDataPath, string extensionPath, string concretePath)
         {
             // Read the model file
-            var code = FileHelper.ReadFile(modelFilePath);
+            var code = ScaffoldFileHelper.ReadFile(modelFilePath);
             var root = RoslynHelper.ParseCode(code);
 
             // Get the class name

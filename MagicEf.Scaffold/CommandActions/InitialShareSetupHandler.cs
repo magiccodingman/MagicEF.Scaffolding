@@ -50,10 +50,10 @@ namespace MagicEf.Scaffold.CommandActions
                 return;
             }
 
-            string shareProjectFilePath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareProjectFilePath"));
-            string shareProjectDirectoryPath = FileHelper.NormalizePath(Path.GetDirectoryName(shareProjectFilePath));
-            string dbProjectFilePath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--dbProjectFilePath"));
-            string dbProjectDirectoryPath = FileHelper.NormalizePath(Path.GetDirectoryName(dbProjectFilePath));
+            string shareProjectFilePath = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareProjectFilePath"));
+            string shareProjectDirectoryPath = ScaffoldFileHelper.NormalizePath(Path.GetDirectoryName(shareProjectFilePath));
+            string dbProjectFilePath = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--dbProjectFilePath"));
+            string dbProjectDirectoryPath = ScaffoldFileHelper.NormalizePath(Path.GetDirectoryName(dbProjectFilePath));
 
 
             Console.WriteLine("Validating arguments...");

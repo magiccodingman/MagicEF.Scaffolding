@@ -36,7 +36,7 @@ namespace MagicEf.Scaffold.CommandActions
                 return;
             }
 
-            var code = FileHelper.ReadFile(customContextFilePath);
+            var code = ScaffoldFileHelper.ReadFile(customContextFilePath);
             var root = RoslynHelper.ParseCode(code);
 
             // Extract the class name and namespace

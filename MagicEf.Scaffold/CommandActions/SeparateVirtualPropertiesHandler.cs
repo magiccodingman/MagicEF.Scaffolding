@@ -40,7 +40,7 @@ namespace MagicEf.Scaffold.CommandActions
             DeleteSeparatedVirtualFiles(directoryPath);
 
             // Get all .cs files except those ending with "SeparatedVirtual.cs"
-            var csFiles = FileHelper.GetCsFiles(directoryPath)
+            var csFiles = ScaffoldFileHelper.GetCsFiles(directoryPath)
                 .Where(f => !f.EndsWith("SeparatedVirtual.cs", StringComparison.OrdinalIgnoreCase));
 
             foreach (var csFile in csFiles)
@@ -78,7 +78,7 @@ namespace MagicEf.Scaffold.CommandActions
 
         private void ProcessFile(string filePath, string? outputPath)
         {
-            var code = FileHelper.ReadFile(filePath);
+            var code = ScaffoldFileHelper.ReadFile(filePath);
             var root = RoslynHelper.ParseCode(code) as CompilationUnitSyntax;
 
             // Get usings
@@ -96,7 +96,7 @@ namespace MagicEf.Scaffold.CommandActions
             if (extractor.ChangesMade)
             {
                 // Write modified code back to original file
-                FileHelper.WriteFile(filePath, newRoot.NormalizeWhitespace().ToFullString());
+                ScaffoldFileHelper.WriteFile(filePath, newRoot.NormalizeWhitespace().ToFullString());
                 Console.WriteLine($"Updated file: {filePath}");
 
                 // Now create the SeparatedVirtual file
@@ -164,7 +164,7 @@ namespace MagicEf.Scaffold.CommandActions
                 }
 
                 // Write the new file
-                FileHelper.WriteFile(newFilePath, newRootVirtual.NormalizeWhitespace().ToFullString());
+                ScaffoldFileHelper.WriteFile(newFilePath, newRootVirtual.NormalizeWhitespace().ToFullString());
                 Console.WriteLine($"Created file: {newFilePath}");
             }
             else

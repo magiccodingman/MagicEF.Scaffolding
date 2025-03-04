@@ -17,17 +17,17 @@ namespace MagicEf.Scaffold.CommandActions
         public override void Handle(string[] args)
         {
             // Parse required arguments
-            string? dbModelsPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--dbModelsPath"));
+            string? dbModelsPath = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--dbModelsPath"));
             string? shareNamespace = ArgumentHelper.GetArgumentValue(args, "--shareNamespace");
             string? dbNamespace = ArgumentHelper.GetArgumentValue(args, "--dbNamespace");
-            string? shareReadOnlyInterfacesPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareReadOnlyInterfacesPath"));
-            string? shareInterfaceExtensionsPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareInterfaceExtensionsPath"));
-            string? shareReadOnlyModelsPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareReadOnlyModelsPath"));
-            string? shareMetadataClassesPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareMetadataClassesPath"));
-            string? shareViewDtoModelsPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareViewDtoModelsPath"));
+            string? shareReadOnlyInterfacesPath = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareReadOnlyInterfacesPath"));
+            string? shareInterfaceExtensionsPath = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareInterfaceExtensionsPath"));
+            string? shareReadOnlyModelsPath = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareReadOnlyModelsPath"));
+            string? shareMetadataClassesPath = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareMetadataClassesPath"));
+            string? shareViewDtoModelsPath = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareViewDtoModelsPath"));
             //string? dbMapperPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--dbMapperPath"));
-            string? shareSharedExtensionsPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareSharedExtensionsPath"));
-            string? shareSharedMetadataPath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareSharedMetadataPath"));
+            string? shareSharedExtensionsPath = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareSharedExtensionsPath"));
+            string? shareSharedMetadataPath = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareSharedMetadataPath"));
 
 
             string? dbExtensionsPath = null;
@@ -35,7 +35,7 @@ namespace MagicEf.Scaffold.CommandActions
 
             if (!string.IsNullOrWhiteSpace(dbextensiondirectory))
             {
-                dbExtensionsPath = FileHelper.NormalizePath(dbextensiondirectory);
+                dbExtensionsPath = ScaffoldFileHelper.NormalizePath(dbextensiondirectory);
             }
 
             string? dbMetadataPath = null;
@@ -43,7 +43,7 @@ namespace MagicEf.Scaffold.CommandActions
 
             if (!string.IsNullOrWhiteSpace(dbmetadatadirectory))
             {
-                dbMetadataPath = FileHelper.NormalizePath(dbmetadatadirectory);
+                dbMetadataPath = ScaffoldFileHelper.NormalizePath(dbmetadatadirectory);
             }
 
             // Optional
@@ -373,7 +373,7 @@ namespace MagicEf.Scaffold.CommandActions
 
             Console.WriteLine("Starting ShareScaffoldProtocolHandler main process");
             // 1) Parse the model file (e.g., AgencyRegion.cs) to identify the class name and properties
-            var originalCode = FileHelper.ReadFile(modelFilePath);
+            var originalCode = ScaffoldFileHelper.ReadFile(modelFilePath);
             var syntaxTree = CSharpSyntaxTree.ParseText(originalCode);
             var root = syntaxTree.GetRoot();
 

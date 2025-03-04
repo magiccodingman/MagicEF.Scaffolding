@@ -51,8 +51,8 @@ namespace MagicEf.Scaffold.CommandActions
 
             // Read and validate required command arguments.
             string? targetNamespace = ArgumentHelper.GetArgumentValue(args, "--namespace");
-            string shareProjectDirectory = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareProjectDirectory"));
-            string flattenDirectory = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--flattenViewDtoDirectoryPath"));
+            string shareProjectDirectory = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--shareProjectDirectory"));
+            string flattenDirectory = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--flattenViewDtoDirectoryPath"));
 
             if (string.IsNullOrWhiteSpace(targetNamespace) ||
                 string.IsNullOrWhiteSpace(shareProjectDirectory) ||

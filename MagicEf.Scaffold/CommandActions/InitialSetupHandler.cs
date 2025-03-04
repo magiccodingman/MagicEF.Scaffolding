@@ -47,7 +47,7 @@ namespace MagicEf.Scaffold.CommandActions
                 return;
             }
 
-            string projectFilePath = FileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--projectFilePath"));
+            string projectFilePath = ScaffoldFileHelper.NormalizePath(ArgumentHelper.GetArgumentValue(args, "--projectFilePath"));
             string nameSpace = ArgumentHelper.GetArgumentValue(args, "--namespace");
             string dbContext = ArgumentHelper.GetArgumentValue(args, "--dbContext");
 

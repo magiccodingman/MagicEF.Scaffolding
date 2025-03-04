@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace MagicEf.Scaffold
 {
-    public static class FileHelper
+    [Obsolete("Use the Magic GeneralSystem toolkit FileHelpers")]
+    public static class ScaffoldFileHelper
     {
         public static string NormalizePath(string? filePath)
         {

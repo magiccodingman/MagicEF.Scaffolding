@@ -11,6 +11,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MagicEf.Scaffold.CommandActions
 {
@@ -37,6 +38,7 @@ namespace MagicEf.Scaffold.CommandActions
         private async Task AdvancedSettings(ProjectProfile profile)
         {
             var settingTasks = new List<(string Name, string Description, string Value, Task Task)>();
+            var settingFuncTasks = new List<(string Name, string Description, string Value, Func<Task> Task)>();
 
             // Get all properties in the profile that have the [MagicSettingInfo] attribute
             var properties = typeof(ProjectProfile).GetProperties(BindingFlags.Public | BindingFlags.Instance)
@@ -58,18 +60,102 @@ namespace MagicEf.Scaffold.CommandActions
                 var lambda = Expression.Lambda<Func<ProjectProfile, object>>(Expression.Convert(propertyAccess, typeof(object)), parameter);
 
                 // Create the SetProfileSetting task but don't await it yet
-                var task = SetProfileSetting(true, SetRequiredPrimary, profile, lambda);
+                var task = SetProfileSetting(true, AdvancedSettings, profile, generalSettings, lambda);
 
                 // Store name, description, value, and task
                 settingTasks.Add((name, description, value, task));
             }
+
+            // Get the ProjectSpecificSettings property from ProjectProfile
+            var projectSettingsProperty = typeof(ProjectProfile).GetProperty("ProjectSpecificSettings");
+
+            if (projectSettingsProperty != null)
+            {
+                var projectSettingsInstance = projectSettingsProperty.GetValue(profile) as ProjectSettings;
+
+                if (projectSettingsInstance != null)
+                {
+                    var projSpecificProperties = typeof(ProjectSettings).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                        .Where(prop => prop.GetCustomAttribute<MagicSettingInfoAttribute>() != null);
+
+                    foreach (var property in projSpecificProperties)
+                    {
+                        var attribute = property.GetCustomAttribute<MagicSettingInfoAttribute>();
+                        string name = attribute?.Name ?? property.Name;
+                        string description = attribute?.Description ?? "No description provided";
+
+                        // Retrieve the value of the property from the ProjectSettings instance
+                        object propertyValue = property.GetValue(projectSettingsInstance);
+                        string value = propertyValue?.ToString() ?? "null";
+
+                        // Get the property type dynamically
+                        Type propertyType = property.PropertyType;
+
+                        // Create the lambda expression: x => x.ProjectSpecificSettings.SomeProperty
+                        var profileParameter = Expression.Parameter(typeof(ProjectProfile), "x");
+                        var settingsPropertyAccess = Expression.Property(profileParameter, projectSettingsProperty);
+                        var propertyAccess = Expression.Property(settingsPropertyAccess, property);
+
+                        // Create the correct generic delegate type Func<ProjectProfile, TProperty>
+                        Type funcType = typeof(Func<,>).MakeGenericType(typeof(ProjectProfile), propertyType);
+
+                        // Use the correct Lambda overload dynamically
+                        var lambdaMethod = typeof(Expression)
+                            .GetMethods()
+                            .FirstOrDefault(m => m.Name == nameof(Expression.Lambda) &&
+                                                 m.GetGenericArguments().Length == 1 &&
+                                                 m.GetParameters().Length == 2);
+
+                        if (lambdaMethod == null)
+                            throw new InvalidOperationException("Failed to locate correct Expression.Lambda method.");
+
+                        var lambdaGenericMethod = lambdaMethod.MakeGenericMethod(funcType);
+                        var lambda = lambdaGenericMethod.Invoke(null, new object[] { propertyAccess, new ParameterExpression[] { profileParameter } });
+
+                        // Locate the SetProfileSetting<TProperty> method (now using NonPublic)
+                        var setProfileSettingMethod = typeof(MagicCliHandler)
+                        .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
+                        .FirstOrDefault(m => m.Name == nameof(SetProfileSetting) &&
+                                             m.IsGenericMethod &&
+                                             m.GetParameters().Length == 5); // ✅ Now correctly expecting 5 parameters
+
+
+                        if (setProfileSettingMethod == null)
+                            throw new InvalidOperationException($"SetProfileSetting<TProperty> method not found!");
+
+                        // Invoke the method with the correct type
+                        var genericMethod = setProfileSettingMethod.MakeGenericMethod(propertyType);
+                        // Store the function reference without executing it
+                        Func<Task> deferredTask = async () =>
+                        {
+                            var result = genericMethod.Invoke(this, new object[] { true, AdvancedSettings, profile, generalSettings, lambda });
+                            if (result is Task task)
+                            {
+                                await task;
+                            }
+                        };
+
+                        // Add to settingTasks, storing the **function itself**, not its result
+                        settingFuncTasks.Add((name, description, value, deferredTask));
+
+                    }
+                }
+            }
+
+
 
 
             StringBuilder sb = new StringBuilder();
 
             foreach (var task in settingTasks)
             {
-                sb.AppendLine($"{task.Name} - '{task.Value}'");
+                sb.AppendLine($"{task.Name} - '{task.Description}'");
+                sb.AppendLine();
+            }
+
+            foreach (var task in settingFuncTasks)
+            {
+                sb.AppendLine($"{task.Name} - '{task.Description}'");
                 sb.AppendLine();
             }
             sb.AppendLine();
@@ -82,6 +168,13 @@ namespace MagicEf.Scaffold.CommandActions
                 menu.AddOption($"{task.Name} - {task.Value??"NOT SET"}",
                 async () => await task.Task);
             }
+
+            foreach (var task in settingFuncTasks)
+            {
+                menu.AddOption($"{task.Name} - {task.Value ?? "NOT SET"}",
+                async () => await task.Task.Invoke());
+            }
+
             menu.AddOption($"Go back to '{profile.Name}'", async () => await SelectProfile(profile));
             await menu.ShowAsync();
         }
@@ -107,7 +200,7 @@ namespace MagicEf.Scaffold.CommandActions
         private async Task<CliMenu> AlterProfileProtocols(ProjectProfile profile)
         {
             if (string.IsNullOrWhiteSpace(profile.PrimaryProjectPath))
-                await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.PrimaryProjectPath);
+                await SetProfileSetting(true, SetRequiredPrimary, profile, generalSettings, x => x.PrimaryProjectPath);
 
             string dbFirstDescription = "Database first Scaffold - runs the 'scaffoldProtocol' for database first projects. " +
                 "Fixes commonplace errors while additionally scaffolding extensions, concrete classes, and powerful " +
@@ -135,18 +228,18 @@ Profile Name (REQUIRED) - The name you'd like to give this profile.
             var menu = new CliMenu("Creating New Profile", description);
 
             menu.AddOption($"Profile Name (Set to '{profile.Name??"REQUIRED TO SET"}')",
-                async () => await SetProfileSetting(false, CreateNewProfile, profile, x => x.Name));
+                async () => await SetProfileSetting(false, CreateNewProfile, profile, generalSettings, x => x.Name));
 
             menu.AddOption($"{GetCheckbox(profile.ProjectSpecificSettings.RunDatabaseFirstScaffolding)} Database first Scaffold",
-                async () => await SetProfileSetting(false, CreateNewProfile, profile, x => x.ProjectSpecificSettings.RunDatabaseFirstScaffolding));
+                async () => await SetProfileSetting(false, CreateNewProfile, profile, generalSettings, x => x.ProjectSpecificSettings.RunDatabaseFirstScaffolding));
 
             menu.AddOption($"{GetCheckbox(profile.ProjectSpecificSettings.RunShareProtocol)} Share (Truth) Protocol",
-                async () => await SetProfileSetting(false, CreateNewProfile, profile, x => x.ProjectSpecificSettings.RunShareProtocol));
+                async () => await SetProfileSetting(false, CreateNewProfile, profile, generalSettings, x => x.ProjectSpecificSettings.RunShareProtocol));
 
             if (profile.ProjectSpecificSettings.RunShareProtocol)
             {
                 menu.AddOption($"{GetCheckbox(profile.ProjectSpecificSettings.RunFlatteningProtocol)} Flatten Protocol",
-                    async () => await SetProfileSetting(false, CreateNewProfile, profile, x => x.ProjectSpecificSettings.RunFlatteningProtocol));
+                    async () => await SetProfileSetting(false, CreateNewProfile, profile, generalSettings, x => x.ProjectSpecificSettings.RunFlatteningProtocol));
             }
             else
             {
@@ -204,26 +297,35 @@ Profile Name (REQUIRED) - The name you'd like to give this profile.
             return isChecked ? "[Enabled]" : "[Disabled]";
         }
 
-        public async Task SetRequiredPrimary(ProjectProfile profile)
+        public async Task SetRequiredPrimary(ProjectProfile _profile)
         {
+            var profile = generalSettings.projectProfiles.FirstOrDefault(x => x.ProjectSpecificSettings.Id == _profile.ProjectSpecificSettings.Id);
+
+            // This must always exist!
+            if (string.IsNullOrWhiteSpace(profile.PrimaryProjectPath)
+                    || !appConfig.FileSystem.DirectoryExists(profile.PrimaryProjectPath))
+            {
+                await SetProfileSetting(true, SetRequiredPrimary, profile, generalSettings, x => x.PrimaryProjectPath);
+            }
+
             if (profile.ProjectSpecificSettings.RunDatabaseFirstScaffolding == true)
             {
-                if (string.IsNullOrWhiteSpace(profile.PrimaryProjectPath)
-                    || !appConfig.FileSystem.DirectoryExists(profile.PrimaryProjectPath))
+                if (string.IsNullOrWhiteSpace(profile.ProjectSpecificSettings.DbContextClassName))
                 {
-                    await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.PrimaryProjectPath);
+                    await SetProfileSetting(true, SetRequiredPrimary, profile, generalSettings, x => x.ProjectSpecificSettings.DbContextClassName);
                 }
+
 
                 if (profile.ProjectSpecificSettings.RunSeparateVirtualProperties == null)
                 {
-                    await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.ProjectSpecificSettings.RunSeparateVirtualProperties);
-                    await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.ProjectSpecificSettings.SeparateVirtualPropertiesPath);
+                    await SetProfileSetting(true, SetRequiredPrimary, profile, generalSettings, x => x.ProjectSpecificSettings.RunSeparateVirtualProperties);
+                    await SetProfileSetting(true, SetRequiredPrimary, profile, generalSettings, x => x.ProjectSpecificSettings.SeparateVirtualPropertiesPath);
                 }
                 else
                 {
                     if (!string.IsNullOrWhiteSpace(profile.ProjectSpecificSettings.SeparateVirtualPropertiesPath)
                     && !appConfig.FileSystem.DirectoryExists(profile.ProjectSpecificSettings.FullSeparateVirtualPropertiesPath))
-                        await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.ProjectSpecificSettings.SeparateVirtualPropertiesPath);
+                        await SetProfileSetting(true, SetRequiredPrimary, profile, generalSettings, x => x.ProjectSpecificSettings.SeparateVirtualPropertiesPath);
                 }
             }
 
@@ -234,7 +336,7 @@ Profile Name (REQUIRED) - The name you'd like to give this profile.
                     if (string.IsNullOrWhiteSpace(profile.DatabaseConnectionString) || profile.DbConnectionVerified == false)
                     {
                         if (string.IsNullOrWhiteSpace(profile.DatabaseConnectionString))
-                            await SetProfileSetting(false, SetRequiredPrimary, profile, x => x.DatabaseConnectionString);
+                            await SetProfileSetting(false, SetRequiredPrimary, profile, generalSettings, x => x.DatabaseConnectionString);
 
                         bool ConnectionStringSet = DatabaseHelper.ValidateConnectionString(profile.DatabaseConnectionString);
                         bool overrideConnectionString = false;
@@ -266,7 +368,7 @@ Profile Name (REQUIRED) - The name you'd like to give this profile.
 
 
                         if (ConnectionStringSet == true || overrideConnectionString == true)
-                        {
+                        {                            
                             profile.DbConnectionVerified = true;
                             generalSettings.Save();
                             break;
@@ -284,7 +386,7 @@ Profile Name (REQUIRED) - The name you'd like to give this profile.
                 if (string.IsNullOrWhiteSpace(profile.ProjectSpecificSettings.ShareProjectPath)
                     || !appConfig.FileSystem.DirectoryExists(profile.ProjectSpecificSettings.FullShareProjectPath))
                 {
-                    await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.ProjectSpecificSettings.ShareProjectPath);
+                    await SetProfileSetting(true, SetRequiredPrimary, profile, generalSettings, x => x.ProjectSpecificSettings.ShareProjectPath);
                 }
             }
             if (profile.ProjectSpecificSettings.RunFlatteningProtocol == true)
@@ -292,7 +394,7 @@ Profile Name (REQUIRED) - The name you'd like to give this profile.
                 if (string.IsNullOrWhiteSpace(profile.ProjectSpecificSettings.FlattenProjectPath)
                     || !appConfig.FileSystem.DirectoryExists(profile.ProjectSpecificSettings.FullFlattenProjectPath))
                 {
-                    await SetProfileSetting(true, SetRequiredPrimary, profile, x => x.ProjectSpecificSettings.FlattenProjectPath);
+                    await SetProfileSetting(true, SetRequiredPrimary, profile, generalSettings, x => x.ProjectSpecificSettings.FlattenProjectPath);
                 }
             }
         }
@@ -303,6 +405,7 @@ Profile Name (REQUIRED) - The name you'd like to give this profile.
 bool ImmediateSave,
 Func<ProjectProfile, Task>? action,  // Action to execute, if provided
 ProjectProfile profile,              // The profile being modified
+GeneralCliSettings _generalSettings,
 Expression<Func<ProjectProfile, TProperty>> propertyExpression)
         {
             // Get the name and description dynamically
@@ -361,7 +464,9 @@ Expression<Func<ProjectProfile, TProperty>> propertyExpression)
             }
 
             // Set the property dynamically
-            MagicSettingHelper.SetPropertyValue(profile, propertyExpression, newValue);
+            var _profile = generalSettings.projectProfiles.FirstOrDefault(x => x.ProjectSpecificSettings.Id == profile.ProjectSpecificSettings.Id);
+            MagicSettingHelper.SetPropertyValue(_profile, propertyExpression, newValue);
+
 
             // Save settings
             if (ImmediateSave)
@@ -370,7 +475,7 @@ Expression<Func<ProjectProfile, TProperty>> propertyExpression)
             // Execute the provided action with the modified profile
             if (action != null)
             {
-                await action(profile);
+                await action(_profile);
             }
         }
     }

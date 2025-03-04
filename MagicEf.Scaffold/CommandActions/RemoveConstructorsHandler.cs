@@ -25,7 +25,7 @@ namespace MagicEf.Scaffold.CommandActions
 
         private void ProcessFile(string filePath)
         {
-            var code = FileHelper.ReadFile(filePath);
+            var code = ScaffoldFileHelper.ReadFile(filePath);
             var root = RoslynHelper.ParseCode(code);
 
             // Get the class name directly from the syntax tree
@@ -52,7 +52,7 @@ namespace MagicEf.Scaffold.CommandActions
 
             if (rewriter.ChangesMade)
             {
-                FileHelper.WriteFile(filePath, newRoot.ToFullString());
+                ScaffoldFileHelper.WriteFile(filePath, newRoot.ToFullString());
                 Console.WriteLine($"Removed constructors from: {filePath}");
             }
             else
