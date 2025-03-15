@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flattening.Protocol.Tests.Attributes
+namespace Truth.Protocol.Tests.Attributes
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
     internal sealed class ShouldPassAttribute : Attribute

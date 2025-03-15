@@ -1,4 +1,4 @@
-﻿using Flattening.Protocol.Tests.Attributes;
+﻿using Truth.Protocol.Tests.Attributes;
 using Magic.Truth.Toolkit.Attributes;
 using Newtonsoft.Json.Linq;
 using System;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flattening.Protocol.Tests.ShareDtoTests
+namespace Truth.Protocol.Tests.ShareDtoTests
 {
     public class DummyPoint
     {

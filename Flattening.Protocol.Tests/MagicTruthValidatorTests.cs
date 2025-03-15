@@ -1,5 +1,5 @@
-﻿using Flattening.Protocol.Tests.Attributes;
-using Flattening.Protocol.Tests.Helpers;
+﻿using Truth.Protocol.Tests.Attributes;
+using Truth.Protocol.Tests.Helpers;
 using Magic.Truth.Toolkit.Attributes;
 using Magic.Truth.Toolkit.Models;
 using Magic.Truth.Toolkit.Extensions.Validation;
@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit.Abstractions;
 
-namespace Flattening.Protocol.Tests
+namespace Truth.Protocol.Tests
 {
     public class MagicTruthValidatorTests
     {
