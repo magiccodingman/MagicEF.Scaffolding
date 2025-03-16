@@ -14,24 +14,46 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using Magic.IndexedDb;
+using Magic.GeneralSystem.Toolkit.Helpers.AssemblyHelper;
+using Magic.IndexedDb.Helpers;
+using Microsoft.VisualBasic;
 
 namespace MagicEf.Scaffold.MagicCli.CommandRunners
 {
-    public class Concrete_IMagicCompoundKey : IMagicCompoundKey
-    {
-        public string[]? ColumnNamesInCompoundKey { get; set; }
-    }
-
-    public class Concrete_IMagicCompoundIndex : IMagicCompoundIndex
-    {
-        public string[]? ColumnNamesInCompoundIndex { get; set; }
-    }
-
     public static class MagicIndexedDbRunner
     {
         public static async Task<bool> Run(PrimaryBaseProject primaryBaseProject)
         {
             string workingPath = primaryBaseProject.WorkingPath;
+
+            try
+            {
+
+                var loadAssemblies = await DotnetHelper.BuildAndLoadProject(workingPath);
+                
+                if (loadAssemblies != null && loadAssemblies.Success == true 
+                    && loadAssemblies.Result != null && loadAssemblies.Result.Any())
+                {
+                    AssemblyLoader.EnsureAllAssembliesLoaded(loadAssemblies.Result);
+
+                    Console.Clear();
+
+                    var allTypes = GetAllMagicTablesDynamic();
+                    MagicValidator.ValidateTables(allTypes);
+                }
+
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine("ERROR:");
+                Console.WriteLine();
+                Console.WriteLine(ex.InnerException?.Message ?? ex.Message);
+                Console.WriteLine();
+                Console.Write("Program will exit when you click any key...");
+                Console.ReadKey();
+            }
+
+
             var compilation = MsBuildHelper.GetProjectCompilation(workingPath);
 
             if (compilation == null)
@@ -45,18 +67,9 @@ namespace MagicEf.Scaffold.MagicCli.CommandRunners
 
            // var success = MagicValidatorRunner.TryValidateMagicTables(workingPath);
 
+
             foreach (var classDeclaration in classDeclarations)
             {
-                try
-                {
-                    var tableName = new DeepSemanticResolver(compilation).ResolveExecutionPath(classDeclaration, "GetTableName");
-                    var compoundIndexes = new DeepSemanticResolver(compilation).ResolveExecutionPath(classDeclaration, "GetCompoundIndexes");
-                    var compoundKey = new DeepSemanticResolver(compilation).ResolveExecutionPath(classDeclaration, "GetCompoundKey");
-                }
-                catch(Exception ex)
-                {
-                    return true;
-                }
 
                 var className = classDeclaration.Identifier.Text;
 
@@ -74,6 +87,34 @@ namespace MagicEf.Scaffold.MagicCli.CommandRunners
                 Console.WriteLine($"Processed: {className}");
             }
             return true;
+        }
+
+        private static List<Type>? GetAllMagicTablesDynamic()
+        {
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            var validTypes = new List<Type>();
+
+            foreach (var assembly in assemblies)
+            {
+                try
+                {
+                    var types = assembly.GetTypes();
+                    validTypes.AddRange(types.Where(t => t.IsClass && !t.IsAbstract && SchemaHelper.ImplementsIMagicTable(t)));
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    Console.WriteLine($"[Skipped Assembly] {assembly.FullName} (Reflection failed: {ex.Message})");
+
+                    // Handle partial success (some types may still be valid)
+                    validTypes.AddRange(ex.Types?.Where(t => t != null && t.IsClass && !t.IsAbstract && SchemaHelper.ImplementsIMagicTable(t)) ?? new List<Type>());
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Critical Error] Failed to load types from {assembly.FullName}: {ex.Message}");
+                }
+            }
+
+            return validTypes;
         }
 
         private static List<ClassDeclarationSyntax> GetClassesImplementingMagicTable(Compilation compilation)
