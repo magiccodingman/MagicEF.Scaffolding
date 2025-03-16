@@ -20,14 +20,19 @@ namespace MagicEf.Scaffold.CommandActions
 
             if (profile.ProjectSpecificSettings.RunDatabaseFirstScaffolding == true)
             {
-                await DbFirstScaffoldRunner.Run(primaryBaseProject);
+                //await DbFirstScaffoldRunner.Run(primaryBaseProject);
 
                 // RUn for the user the, "ambiguousIndex" and "removeOnConfiguring"
             }
             if (profile.ProjectSpecificSettings.RunSeparateVirtualProperties == true)
                 await SeparateVirtualPropertiesRunner.Run(primaryBaseProject);
 
-            Console.WriteLine();
+            if (profile.ProjectSpecificSettings.RunMagicIndexedDbScaffolding == true)
+            {
+                await MagicIndexedDbRunner.Run(primaryBaseProject);
+            }
+
+                Console.WriteLine();
             Console.WriteLine();
             Console.WriteLine("Click Enter to go back to the profile menu...");
             Console.Read();

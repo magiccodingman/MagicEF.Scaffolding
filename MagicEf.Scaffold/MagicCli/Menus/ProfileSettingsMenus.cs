@@ -187,6 +187,7 @@ namespace MagicEf.Scaffold.CommandActions
                 profile.ProjectSpecificSettings.RunDatabaseFirstScaffolding == true
                 || profile.ProjectSpecificSettings.RunShareProtocol == true
                 || profile.ProjectSpecificSettings.RunFlatteningProtocol == true
+                || profile.ProjectSpecificSettings.RunMagicIndexedDbScaffolding == true
                 ))
             {
                 menu.AddOption($"SAVE PROFILE",
@@ -201,6 +202,10 @@ namespace MagicEf.Scaffold.CommandActions
         {
             if (string.IsNullOrWhiteSpace(profile.PrimaryProjectPath))
                 await SetProfileSetting(true, SetRequiredPrimary, profile, generalSettings, x => x.PrimaryProjectPath);
+
+            string indexedDbDescription = "Magic IndexedDB - runs the Magic IndexedDB scaffolding protocol for Blazor. " +
+                "This will auto scaffold your IndexedDB migration scripts for easy use with the Magic.IndexedDB library.";
+
 
             string dbFirstDescription = "Database first Scaffold - runs the 'scaffoldProtocol' for database first projects. " +
                 "Fixes commonplace errors while additionally scaffolding extensions, concrete classes, and powerful " +
@@ -220,6 +225,8 @@ $@"To create a profile, you must create a profile name and select at least one p
 
 Profile Name (REQUIRED) - The name you'd like to give this profile.
 
+{indexedDbDescription}
+
 {dbFirstDescription}
 
 {shareProtocol}
@@ -229,6 +236,9 @@ Profile Name (REQUIRED) - The name you'd like to give this profile.
 
             menu.AddOption($"Profile Name (Set to '{profile.Name??"REQUIRED TO SET"}')",
                 async () => await SetProfileSetting(false, CreateNewProfile, profile, generalSettings, x => x.Name));
+
+            menu.AddOption($"{GetCheckbox(profile.ProjectSpecificSettings.RunMagicIndexedDbScaffolding)} Magic IndexedDB",
+                async () => await SetProfileSetting(false, CreateNewProfile, profile, generalSettings, x => x.ProjectSpecificSettings.RunMagicIndexedDbScaffolding));
 
             menu.AddOption($"{GetCheckbox(profile.ProjectSpecificSettings.RunDatabaseFirstScaffolding)} Database first Scaffold",
                 async () => await SetProfileSetting(false, CreateNewProfile, profile, generalSettings, x => x.ProjectSpecificSettings.RunDatabaseFirstScaffolding));
@@ -300,6 +310,9 @@ Profile Name (REQUIRED) - The name you'd like to give this profile.
         public async Task SetRequiredPrimary(ProjectProfile _profile)
         {
             var profile = generalSettings.projectProfiles.FirstOrDefault(x => x.ProjectSpecificSettings.Id == _profile.ProjectSpecificSettings.Id);
+
+            if (profile == null)
+                return;
 
             // This must always exist!
             if (string.IsNullOrWhiteSpace(profile.PrimaryProjectPath)
@@ -463,6 +476,13 @@ Expression<Func<ProjectProfile, TProperty>> propertyExpression)
                 newValue = MagicSettingHelper.ReadUserInput<TProperty>(name);
             }
 
+            if(profile.ProjectSpecificSettings == null || profile.ProjectSpecificSettings.HasCompletedBasicConfiguration == false)
+            {
+                MagicSettingHelper.SetPropertyValue(profile, propertyExpression, newValue);
+                await action(profile);
+                return;
+            }
+            
             // Set the property dynamically
             var _profile = _generalSettings.projectProfiles.FirstOrDefault(x => x.ProjectSpecificSettings.Id == profile.ProjectSpecificSettings.Id);
             MagicSettingHelper.SetPropertyValue(_profile, propertyExpression, newValue);

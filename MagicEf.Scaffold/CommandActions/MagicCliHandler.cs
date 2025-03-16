@@ -41,6 +41,10 @@ namespace MagicEf.Scaffold.CommandActions
         {
             try
             {
+
+
+
+
                 var result = await new InitialSetup().Initialize();
                 appConfig = result.Item1;
                 generalSettings = result.Item2;

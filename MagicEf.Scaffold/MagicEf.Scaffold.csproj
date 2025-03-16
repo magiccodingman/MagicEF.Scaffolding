@@ -19,8 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Magic.IndexedDb\Magic.IndexedDb\Magic.IndexedDb.csproj" />
     <ProjectReference Include="..\..\..\Magic.Toolkits\Magic.Cli.Toolkit\Magic.Cli.Toolkit.csproj" />
     <ProjectReference Include="..\..\..\Magic.Toolkits\Magic.GeneralSystem.Toolkit\Magic.GeneralSystem.Toolkit.csproj" />
+    <ProjectReference Include="..\Magic.CodeGen.Toolkit\Magic.CodeGen.Toolkit.csproj" />
     <ProjectReference Include="..\Magic.Truth.Toolkit\Magic.Truth.Toolkit.csproj" />
   </ItemGroup>
 

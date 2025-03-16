@@ -24,6 +24,9 @@ namespace MagicEf.Scaffold.Settings
         [MagicSettingInfo("Db First Scaffolding", "Run Magic EF's database first scaffolding for database first configurations.")]
         public bool RunDatabaseFirstScaffolding { get; set; } = false;
 
+        [MagicSettingInfo("Magic IndexedDB", "Run Magic IndexedDB scaffolding for easy IndexedDB migrations.")]
+        public bool RunMagicIndexedDbScaffolding { get; set; } = false;
+
         [MagicSettingInfo("Database Context Class Name", "The name that will be provided to your DbContext for LINQ to SQL use. Do not add any spaces!")]
         public string? DbContextClassName { get; set; }
 

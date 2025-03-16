@@ -38,7 +38,7 @@ namespace MagicEf.Scaffold.Services
             }
         }
 
-        private void InitializeCompilation(string directory)
+        private Compilation InitializeCompilation(string directory)
         {
             string normalizedDirectory = NormalizeDirectory(directory);
             Console.WriteLine($"Initializing Roslyn compilation for: {normalizedDirectory}");
@@ -57,7 +57,41 @@ namespace MagicEf.Scaffold.Services
                 Console.WriteLine($"Opening project: {csprojFile}");
 
                 var project = workspace.OpenProjectAsync(csprojFile).GetAwaiter().GetResult();
-                _compilation = project.GetCompilationAsync().GetAwaiter().GetResult();
+                var _comp = project.GetCompilationAsync().GetAwaiter().GetResult();
+
+                if (project == null)
+                    throw new Exception($"Failed to compile project: {csprojFile}");
+
+                Console.WriteLine("Successfully loaded project into Roslyn.");
+                return _comp;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error initializing Roslyn Compilation: {ex.Message}");
+                throw;
+            }
+        }
+
+        private async Task InitializeCompilationAsync(string directory)
+        {
+            string normalizedDirectory = NormalizeDirectory(directory);
+            Console.WriteLine($"Initializing Roslyn compilation for: {normalizedDirectory}");
+
+            try
+            {
+                using var workspace = MSBuildWorkspace.Create();
+
+                var csprojFiles = Directory.GetFiles(normalizedDirectory, "*.csproj", SearchOption.TopDirectoryOnly);
+                if (csprojFiles.Length == 0)
+                    throw new FileNotFoundException($"No .csproj file found in {normalizedDirectory}.");
+
+                string csprojFile = csprojFiles.FirstOrDefault(f => !f.Contains("Backup", StringComparison.OrdinalIgnoreCase))
+                                    ?? csprojFiles.First();
+
+                Console.WriteLine($"Opening project: {csprojFile}");
+
+                var project = workspace.OpenProjectAsync(csprojFile).GetAwaiter().GetResult();
+                _compilation = await project.GetCompilationAsync();
 
                 if (_compilation == null)
                     throw new Exception($"Failed to compile project: {csprojFile}");

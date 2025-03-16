@@ -22,7 +22,7 @@ namespace MagicEf.Scaffold.Settings
         {
             get
             {
-                if (_projectSpecificSettings == null)
+                if (_projectSpecificSettings == null && !string.IsNullOrWhiteSpace(PrimaryProjectPath))
                 {
                     _projectSpecificSettings = new ProjectSettings(PrimaryProjectPath, ProjectSettingsName);
                 }
