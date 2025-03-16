@@ -2,6 +2,24 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Title>Magic.Truth.Toolkit</Title>
+    <Version>1.0.0</Version>
+    <PackageIcon>wizardHatIcon.png</PackageIcon>
+    <RepositoryUrl>https://github.com/magiccodingman/MagicEF.Scaffolding</RepositoryUrl>
+    <Description>Toolkit for the truth protocol</Description>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <Copyright>MIT</Copyright>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\Magic.IndexedDb\wizardHatIcon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>

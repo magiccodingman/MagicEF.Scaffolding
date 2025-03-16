@@ -104,7 +104,7 @@ namespace Magic.CodeGen.Toolkit.Helpers
             var methods = new List<MethodDeclarationSyntax>();
             var classAttributes = new HashSet<AttributeSyntax>();
             var genericConstraints = new HashSet<string>();
-            var requiredUsings = new HashSet<string>(manualUsings);
+            var requiredUsings = new HashSet<string>(manualUsings??new List<string>());
 
             foreach (var partialClass in allConnectedClasses)
             {
@@ -208,8 +208,18 @@ namespace Magic.CodeGen.Toolkit.Helpers
             var sb = new StringBuilder();
             foreach (var u in requiredUsings) sb.AppendLine($"using {u};");
             sb.AppendLine($"\nnamespace {newNamespace}\n{{");
-            sb.AppendLine($"    [{string.Join(", ", classAttributes)}]");
-            sb.AppendLine($"    public class {newClassName} : {string.Join(", ", interfaces)} {string.Join(" ", genericConstraints)}");
+
+
+            if (classAttributes.Any())
+            {
+                sb.AppendLine($"    [{string.Join(", ", classAttributes)}]");
+            }
+
+
+            string interfacePart = (interfaces != null && interfaces.Any()) ? $" : {string.Join(", ", interfaces)}" : "";
+            string constraintPart = (genericConstraints != null && genericConstraints.Any()) ? $" {string.Join(" ", genericConstraints)}" : "";
+
+            sb.AppendLine($"    public class {newClassName}{interfacePart}{constraintPart}");
             sb.AppendLine("    {");
 
             foreach (var prop in properties.Values) sb.AppendLine($"        {prop.ToFullString()}");
@@ -234,6 +244,62 @@ namespace Magic.CodeGen.Toolkit.Helpers
 
                 collectedClasses.Add(classDeclaration);
 
+                INamedTypeSymbol? classSymbol = null;
+
+                try
+                {
+                    classSymbol = semanticModel.GetDeclaredSymbol(classDeclaration);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to get symbol for class: {classDeclaration.Identifier.ValueText}");
+                    Console.WriteLine($"Error: {ex.Message}");
+                    continue; // ✅ Skip the failing class instead of crashing
+                }
+
+                if (classSymbol == null) continue;
+
+                // Collect base class if it's in the same compilation
+                if (classSymbol.BaseType != null &&
+                    classSymbol.BaseType.SpecialType != SpecialType.System_Object &&
+                    classSymbol.BaseType.ContainingAssembly == compilation.Assembly)
+                {
+                    var baseClassSyntax = classSymbol.BaseType.DeclaringSyntaxReferences
+                        .Select(r => r.GetSyntax() as ClassDeclarationSyntax)
+                        .Where(c => c != null)
+                        .ToList();
+
+                    if (baseClassSyntax.Count > 0)
+                    {
+                        CollectConnectedClasses(baseClassSyntax, collectedClasses, compilation, semanticModel);
+                    }
+                }
+
+                // Collect all partial class declarations (using our helper method)
+                var partialClassDeclarations = AnalyzerHelper.GetPartialClassDeclarations(compilation, classDeclaration);
+                foreach (var partialClass in partialClassDeclarations)
+                {
+                    if (!collectedClasses.Any(c => c.Identifier.ValueText == partialClass.Identifier.ValueText))
+                    {
+                        collectedClasses.Add(partialClass);
+                    }
+                }
+            }
+        }
+
+        /*private static void CollectConnectedClasses(
+    IEnumerable<ClassDeclarationSyntax> classDeclarations,
+    HashSet<ClassDeclarationSyntax> collectedClasses,
+    Compilation compilation,
+    SemanticModel semanticModel)
+        {
+            foreach (var classDeclaration in classDeclarations)
+            {
+                if (collectedClasses.Contains(classDeclaration))
+                    continue; // Prevent duplicate processing
+
+                collectedClasses.Add(classDeclaration);
+
                 // Get the class symbol
                 var classSymbol = semanticModel.GetDeclaredSymbol(classDeclaration);
                 if (classSymbol == null) continue;
@@ -246,7 +312,14 @@ namespace Magic.CodeGen.Toolkit.Helpers
                         .Where(c => c != null)
                         .ToList();
 
-                    CollectConnectedClasses(baseClassSyntax, collectedClasses, compilation, semanticModel);
+                    try
+                    {
+                        CollectConnectedClasses(baseClassSyntax, collectedClasses, compilation, semanticModel);
+                    }
+                    catch(Exception ex)
+                    {
+
+                    }
                 }
 
                 // Collect all partial class declarations (using our helper method)
@@ -257,7 +330,7 @@ namespace Magic.CodeGen.Toolkit.Helpers
                         collectedClasses.Add(partialClass);
                 }
             }
-        }
+        }*/
 
     }
 }
