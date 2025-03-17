@@ -17,6 +17,7 @@ using Magic.IndexedDb;
 using Magic.GeneralSystem.Toolkit.Helpers.AssemblyHelper;
 using Magic.IndexedDb.Helpers;
 using Microsoft.VisualBasic;
+using Magic.Cli.Toolkit;
 
 namespace MagicEf.Scaffold.MagicCli.CommandRunners
 {
@@ -45,12 +46,13 @@ namespace MagicEf.Scaffold.MagicCli.CommandRunners
             }
             catch(Exception ex)
             {
-                Console.WriteLine("ERROR:");
-                Console.WriteLine();
-                Console.WriteLine(ex.InnerException?.Message ?? ex.Message);
-                Console.WriteLine();
-                Console.Write("Program will exit when you click any key...");
+                MagicConsole.WriteLine("ERROR:");
+                MagicConsole.WriteLine();
+                MagicConsole.WriteLine(ex.InnerException?.Message ?? ex.Message);
+                MagicConsole.WriteLine();
+                MagicConsole.Write("Program go back to the profile settings when you click any key...");
                 Console.ReadKey();
+                return true;
             }
 
 
@@ -58,7 +60,7 @@ namespace MagicEf.Scaffold.MagicCli.CommandRunners
 
             if (compilation == null)
             {
-                Console.WriteLine("Compilation could not be generated.");
+                MagicConsole.WriteLine("Compilation could not be generated.");
                 return false;
             }
 
@@ -84,7 +86,7 @@ namespace MagicEf.Scaffold.MagicCli.CommandRunners
                     null
                 );
 
-                Console.WriteLine($"Processed: {className}");
+                MagicConsole.WriteLine($"Processed: {className}");
             }
             return true;
         }

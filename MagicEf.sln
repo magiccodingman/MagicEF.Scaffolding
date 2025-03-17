@@ -7,11 +7,19 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MagicEf", "MagicEf\MagicEf.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MagicEf.Scaffold", "MagicEf.Scaffold\MagicEf.Scaffold.csproj", "{C56045CF-FC5A-4A18-83A0-36CC609AA41E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Flattening.Protocol.Tests", "Flattening.Protocol.Tests\Flattening.Protocol.Tests.csproj", "{276B6C7F-4EA8-400B-94E5-330226C3F99D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Truth.Protocol.Tests", "Flattening.Protocol.Tests\Truth.Protocol.Tests.csproj", "{276B6C7F-4EA8-400B-94E5-330226C3F99D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Magic.Truth.Toolkit", "Magic.Truth.Toolkit\Magic.Truth.Toolkit.csproj", "{FF33F9F9-FBAF-4206-A84A-5B9FC2062BB5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Magic.Truth.Toolkit.Extensions", "Magic.Truth.Toolkit.Extensions\Magic.Truth.Toolkit.Extensions.csproj", "{25F39497-D862-4185-8329-CE21348CAFEE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Magic.Cli.Toolkit", "..\..\Magic.Toolkits\Magic.Cli.Toolkit\Magic.Cli.Toolkit.csproj", "{DD6247F8-EDB5-492B-8D09-684E33F96A58}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Magic.GeneralSystem.Toolkit", "..\..\Magic.Toolkits\Magic.GeneralSystem.Toolkit\Magic.GeneralSystem.Toolkit.csproj", "{797E1892-96FD-42C5-A74F-4F6BA40A93FD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Magic.CodeGen.Toolkit", "Magic.CodeGen.Toolkit\Magic.CodeGen.Toolkit.csproj", "{0A27124F-A5EA-4D69-B059-9426FA6535C7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Magic.IndexedDb", "..\..\Magic.IndexedDb\Magic.IndexedDb\Magic.IndexedDb.csproj", "{AF838CA0-E4BE-5E81-99D5-515B70F37734}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +47,22 @@ Global
 		{25F39497-D862-4185-8329-CE21348CAFEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{25F39497-D862-4185-8329-CE21348CAFEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{25F39497-D862-4185-8329-CE21348CAFEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD6247F8-EDB5-492B-8D09-684E33F96A58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD6247F8-EDB5-492B-8D09-684E33F96A58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD6247F8-EDB5-492B-8D09-684E33F96A58}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD6247F8-EDB5-492B-8D09-684E33F96A58}.Release|Any CPU.Build.0 = Release|Any CPU
+		{797E1892-96FD-42C5-A74F-4F6BA40A93FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{797E1892-96FD-42C5-A74F-4F6BA40A93FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{797E1892-96FD-42C5-A74F-4F6BA40A93FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{797E1892-96FD-42C5-A74F-4F6BA40A93FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A27124F-A5EA-4D69-B059-9426FA6535C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A27124F-A5EA-4D69-B059-9426FA6535C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A27124F-A5EA-4D69-B059-9426FA6535C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A27124F-A5EA-4D69-B059-9426FA6535C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF838CA0-E4BE-5E81-99D5-515B70F37734}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF838CA0-E4BE-5E81-99D5-515B70F37734}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF838CA0-E4BE-5E81-99D5-515B70F37734}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF838CA0-E4BE-5E81-99D5-515B70F37734}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

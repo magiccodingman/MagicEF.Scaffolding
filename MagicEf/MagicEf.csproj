@@ -1,49 +1,42 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-	<PropertyGroup>
-		<OutputType>Exe</OutputType>
-		<TargetFramework>net8.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-		<PackAsTool>true</PackAsTool>
-		<ToolCommandName>MagicEf</ToolCommandName>
-
-
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<Title>Magic EF Scaffolding</Title>
-		<Authors>Magic Coding Man - Sayou</Authors>
-		<Company>Sayou</Company>
-		<Description>A powerful automation tool for Database First workflows, enhancing Entity Framework by generating extensible repositories, metadata, and extensions. It eliminates manual intervention, ensures consistency, and streamlines database integration across environments with ease.</Description>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<PackageIcon>Wizard_256x256.png</PackageIcon>
-		<PackageProjectUrl>https://github.com/magiccodingman/MagicEF.Scaffolding</PackageProjectUrl>
-		<Copyright>MIT</Copyright>
-		<RepositoryUrl>https://github.com/magiccodingman/MagicEF.Scaffolding</RepositoryUrl>
-		<Version>1.0.16</Version>
-		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-	</PropertyGroup>
-
-	<ItemGroup>
-		<None Include="..\LICENSE.txt">
-		  <Pack>True</Pack>
-		  <PackagePath>\</PackagePath>
-		</None>
-		<None Include="..\README.md">
-			<Pack>True</Pack>
-			<PackagePath>\</PackagePath>
-		</None>
-		<None Include="..\Wizard_256x256.png">
-			<Pack>True</Pack>
-			<PackagePath>\</PackagePath>
-		</None>
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\MagicEf.Scaffold\MagicEf.Scaffold.csproj" />
-	</ItemGroup>
-
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>MagicEf</ToolCommandName>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Magic EF Scaffolding</Title>
+    <Authors>Magic Coding Man - Sayou</Authors>
+    <Company>Sayou</Company>
+    <Description>A powerful automation tool for Database First workflows, enhancing Entity Framework by generating extensible repositories, metadata, and extensions. It eliminates manual intervention, ensures consistency, and streamlines database integration across environments with ease.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>Wizard_256x256.png</PackageIcon>
+    <PackageProjectUrl>https://github.com/magiccodingman/MagicEF.Scaffolding</PackageProjectUrl>
+    <Copyright>MIT</Copyright>
+    <RepositoryUrl>https://github.com/magiccodingman/MagicEF.Scaffolding</RepositoryUrl>
+    <Version>1.0.16</Version>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\Wizard_256x256.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MagicEf.Scaffold\MagicEf.Scaffold.csproj" />
+  </ItemGroup>
 </Project>
