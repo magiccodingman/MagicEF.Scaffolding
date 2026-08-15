@@ -51,9 +51,6 @@ jobs:
       - name: Restore
         run: dotnet restore MagicEf.sln
 
-      - name: Test
-        run: dotnet test MagicEf.sln --configuration Release --no-restore
-
       - name: Select next package version
         id: package-version
         run: |
@@ -80,10 +77,25 @@ jobs:
           "PACKAGE_VERSION=$nextVersion" >> $env:GITHUB_ENV
           "version=$nextVersion" >> $env:GITHUB_OUTPUT
 
+      - name: Build
+        run: >-
+          dotnet build MagicEf.sln
+          --configuration Release
+          --no-restore
+          -p:Version=$env:PACKAGE_VERSION
+
+      - name: Test
+        run: >-
+          dotnet test MagicEf.sln
+          --configuration Release
+          --no-build
+          --no-restore
+
       - name: Pack
         run: >-
           dotnet pack MagicEf/MagicEf.csproj
           --configuration Release
+          --no-build
           --no-restore
           --output artifacts
           -p:Version=$env:PACKAGE_VERSION
