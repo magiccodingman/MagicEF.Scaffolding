@@ -81,7 +81,7 @@ namespace MagicEf.Scaffold.CommandActions
                 .ToList();
 
             // Include additional references from the output folder (bin)
-            string binPath = Path.Combine(projectFilePath, "bin", "Debug", "net8.0"); // Adjust as necessary
+            string binPath = Path.Combine(projectFilePath, "bin", "Debug", "net10.0"); // Adjust as necessary
             if (Directory.Exists(binPath))
             {
                 foreach (var dll in Directory.GetFiles(binPath, "*.dll"))
