@@ -22,7 +22,11 @@ Additional features not discussed in the read me is:
 The Read Me here mostly goes over the primary Magic EF protocol.
 
 ## Prerequisites
-This project works off of NET 8 SDK. Validate this as well if you have issues because maybe I forgot to update this documentation. But the CLI app itself is in NET 8 as of right now and I plan to stick to the newest LTS versions of NET for this project. So install the appropriate NET SDK's to your PC. I may build a self contained released version that I manually package in the future, but that isn't in the works right now.
+This project targets .NET 10. Install the .NET 10 SDK before building the source or using a framework-dependent installation of the CLI tool.
+
+### NuGet releases
+
+Merges to the `release` branch run `.github/workflows/publish-nuget.yml`. The workflow builds and tests the solution, selects the next patch version after the latest stable `MagicEf` version on NuGet.org, verifies the packed tool, and publishes it through NuGet trusted publishing.
 
 ### Required Tools
 This project works alongside `dotnet ef dbcontext`. You’ll need to install the following tools:

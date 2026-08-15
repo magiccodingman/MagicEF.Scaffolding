@@ -1,0 +1,110 @@
+name: Publish NuGet
+
+on:
+  push:
+    branches:
+      - release
+
+concurrency:
+  group: publish-magicef-nuget
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build, test, and publish
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: src/MagicEF.Scaffolding
+
+    steps:
+      - name: Check out MagicEF
+        uses: actions/checkout@v6
+        with:
+          path: src/MagicEF.Scaffolding
+
+      # MagicEF currently consumes these source projects through sibling
+      # ProjectReference paths. Preserve that layout on a clean runner.
+      - name: Check out Magic.Toolkits
+        uses: actions/checkout@v6
+        with:
+          repository: magiccodingman/Magic.Toolkits
+          path: Magic.Toolkits
+
+      - name: Check out Magic.IndexedDb
+        uses: actions/checkout@v6
+        with:
+          repository: magiccodingman/Magic.IndexedDb
+          path: Magic.IndexedDb
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.109
+
+      - name: Restore
+        run: dotnet restore MagicEf.sln
+
+      - name: Test
+        run: dotnet test MagicEf.sln --configuration Release --no-restore
+
+      - name: Select next package version
+        id: package-version
+        run: |
+          $packageIndex = Invoke-RestMethod `
+            -Uri "https://api.nuget.org/v3-flatcontainer/magicef/index.json"
+
+          $latestVersion = $packageIndex.versions |
+            Where-Object { $_ -match '^\d+\.\d+\.\d+$' } |
+            ForEach-Object { [version]$_ } |
+            Sort-Object -Descending |
+            Select-Object -First 1
+
+          if ($null -eq $latestVersion) {
+            throw "Could not determine the latest stable MagicEf package version."
+          }
+
+          $nextVersion = [version]::new(
+            $latestVersion.Major,
+            $latestVersion.Minor,
+            $latestVersion.Build + 1
+          )
+
+          "Publishing MagicEf $nextVersion"
+          "PACKAGE_VERSION=$nextVersion" >> $env:GITHUB_ENV
+          "version=$nextVersion" >> $env:GITHUB_OUTPUT
+
+      - name: Pack
+        run: >-
+          dotnet pack MagicEf/MagicEf.csproj
+          --configuration Release
+          --no-restore
+          --output artifacts
+          -p:Version=$env:PACKAGE_VERSION
+
+      - name: Verify packaged tool
+        run: |
+          dotnet tool install MagicEf `
+            --tool-path .tool-smoke `
+            --add-source artifacts `
+            --version $env:PACKAGE_VERSION
+
+          ./.tool-smoke/MagicEf --help
+
+      - name: NuGet login
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Publish package
+        run: >-
+          dotnet nuget push artifacts/*.nupkg
+          --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
+          --source https://api.nuget.org/v3/index.json
